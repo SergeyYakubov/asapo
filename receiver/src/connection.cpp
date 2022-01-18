@@ -9,11 +9,11 @@
 namespace asapo {
 
 Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
-                       SharedCache cache, std::string receiver_tag) :
+                       SharedCache cache, KafkaClient* kafkaClient, std::string receiver_tag) :
     io__{GenerateDefaultIO()},
     statistics__{new ReceiverStatistics},
              log__{GetDefaultReceiverLogger()},
-requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache}} {
+requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache, kafkaClient}} {
     socket_fd_ = socket_fd;
     address_ = address;
     statistics__->AddTag("connection_from", address);

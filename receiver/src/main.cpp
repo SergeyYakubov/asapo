@@ -6,6 +6,7 @@
 
 #include "receiver_data_server/receiver_data_server_logger.h"
 #include "asapo/common/internal/version.h"
+#include "asapo/kafka_client/kafka_client.h"
 
 #include "receiver_data_server/receiver_data_server.h"
 #include "receiver_data_server/net_server/rds_tcp_server.h"
@@ -77,11 +78,11 @@ std::vector<std::thread> StartDataServers(const asapo::ReceiverConfig* config, a
 }
 
 int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
-                  asapo::AbstractLogger* logger) {
+                  asapo::KafkaClient* kafkaClient, asapo::AbstractLogger* logger) {
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
     logger->Info(std::string("starting receiver, version ") + asapo::kVersion);
-    auto* receiver = new asapo::Receiver(cache);
+    auto receiver = std::unique_ptr<asapo::Receiver>{new asapo::Receiver(cache, kafkaClient)};
     logger->Info("listening on " + address);
 
     asapo::Error err;
@@ -134,7 +135,20 @@ int main(int argc, char* argv[]) {
     }
 
     auto metrics_thread = StartMetricsServer(config->metrics, logger);
-    auto exit_code = StartReceiver(config, cache, logger);
+
+    std::unique_ptr<asapo::KafkaClient> kafkaClient;
+    if (config->kafka_config.enabled) {
+        kafkaClient.reset(asapo::CreateKafkaClient(config->kafka_config, &err));
+        if (kafkaClient == nullptr) {
+            logger->Error("error initializing kafka client: " + err->Explain());
+            return EXIT_FAILURE;
+        }
+    }
+    else {
+        logger->Info("kafka notifications disabled.");
+    }
+
+    auto exit_code = StartReceiver(config, cache, kafkaClient.get(), logger);
 // todo: implement graceful exit, currently it never reaches this point
     return exit_code;
 }

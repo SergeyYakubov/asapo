@@ -19,6 +19,12 @@ if(CURL_FOUND) #old FindCURL versions do not create CURL::libcurl target, so we 
 endif()
 
 
+find_package(RdKafka REQUIRED)
+message (STATUS "Found rdkafka++ libraries: ${RDKAFKA_LIBRARIES}")
+message (STATUS "rdkafka++ include dir : ${RDKAFKA_INCLUDE_DIR}")
+if (WIN32)
+    message (STATUS "rdkafka++ binary dir (dll): ${RDKAFKA_BIN_DIR}")
+endif()
 
 # python is needed anyway, even if no Python packages are build (e.g. to parse test results)
 if ("${Python_EXECUTABLE}" STREQUAL "")

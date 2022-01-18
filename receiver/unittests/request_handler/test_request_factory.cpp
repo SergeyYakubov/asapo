@@ -5,6 +5,7 @@
 
 #include "asapo/unittests/MockIO.h"
 #include "asapo/unittests/MockDatabase.h"
+#include "asapo/unittests/MockKafkaClient.h"
 #include "../../src/connection.h"
 #include "../../src/receiver_error.h"
 #include "../../src/request.h"
@@ -25,7 +26,8 @@ namespace {
 
 class FactoryTests : public Test {
   public:
-    RequestFactory factory{nullptr};
+    asapo::MockKafkaClient kafkaClient;
+    RequestFactory factory{nullptr, &kafkaClient};
     Error err{nullptr};
     GenericRequestHeader generic_request_header;
     ReceiverConfig config;
@@ -47,18 +49,21 @@ TEST_F(FactoryTests, ErrorOnWrongCode) {
 }
 
 TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendCode) {
+    config.kafka_config.enabled = true;
+    SetReceiverConfig(config, "none");
+
     for (auto code : std::vector<asapo::Opcode> {asapo::Opcode::kOpcodeTransferData, asapo::Opcode::kOpcodeTransferDatasetData}) {
         generic_request_header.op_code = code;
         auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
-
         ASSERT_THAT(err, Eq(nullptr));
         ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
-        ASSERT_THAT(request->GetListHandlers().size(), Eq(5));
+        ASSERT_THAT(request->GetListHandlers().size(), Eq(6));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerSecondaryAuthorization*>(request->GetListHandlers()[0]),
                     Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[2]), Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileProcess*>(request->GetListHandlers()[3]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerKafkaNotify*>(request->GetListHandlers()[4]), Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
     }
 }
@@ -67,6 +72,7 @@ TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendCodeLargeFile) {
     for (auto code : std::vector<asapo::Opcode> {asapo::Opcode::kOpcodeTransferData, asapo::Opcode::kOpcodeTransferDatasetData}) {
         generic_request_header.op_code = code;
         config.receive_to_disk_threshold_mb = 0;
+        config.kafka_config.enabled = true;
         SetReceiverConfig(config, "none");
 
         generic_request_header.data_size = 1;
@@ -74,11 +80,12 @@ TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendCodeLargeFile) {
 
         ASSERT_THAT(err, Eq(nullptr));
         ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
-        ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
+        ASSERT_THAT(request->GetListHandlers().size(), Eq(5));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerSecondaryAuthorization*>(request->GetListHandlers()[0]),
                     Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileProcess*>(request->GetListHandlers()[2]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerKafkaNotify*>(request->GetListHandlers()[3]), Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
     }
 }
@@ -107,6 +114,25 @@ TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
     generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
             asapo::IngestModeFlags::kStoreInFilesystem;
 
+    config.kafka_config.enabled = true;
+    SetReceiverConfig(config, "none");
+
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(5));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerSecondaryAuthorization*>(request->GetListHandlers()[0]),
+                Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[2]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileProcess*>(request->GetListHandlers()[3]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerKafkaNotify*>(request->GetListHandlers()[4]), Ne(nullptr));
+}
+
+TEST_F(FactoryTests, DoNotAddKafkaIfNotWanted) {
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+        asapo::IngestModeFlags::kStoreInFilesystem;
+
+    config.kafka_config.enabled = false;
     SetReceiverConfig(config, "none");
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
@@ -120,7 +146,7 @@ TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
 }
 
 TEST_F(FactoryTests, CachePassedToRequest) {
-    RequestFactory factory{std::shared_ptr<asapo::DataCache>{new asapo::DataCache{0, 0}}};
+    RequestFactory factory{std::shared_ptr<asapo::DataCache>{new asapo::DataCache{0, 0}}, nullptr};
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));

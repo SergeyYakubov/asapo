@@ -12,7 +12,7 @@ using namespace asapo;
 namespace {
 
 TEST(Receiver, Constructor) {
-    asapo::Receiver receiver(nullptr);
+    asapo::Receiver receiver(nullptr, nullptr);
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(receiver.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(receiver.io__.get()), Ne(nullptr));
 }
@@ -31,7 +31,7 @@ class StartListenerFixture : public testing::Test {
     Error err;
     ::testing::NiceMock<asapo::MockLogger> mock_logger;
     ::testing::NiceMock<asapo::MockIO> mock_io;
-    asapo::Receiver receiver{nullptr};
+    asapo::Receiver receiver{nullptr, nullptr};
 
     void SetUp() override {
         err = nullptr;

@@ -8,6 +8,7 @@
 #include "request_handler_db_last_stream.h"
 #include "request_handler_db_delete_stream.h"
 #include "request_handler_db_get_meta.h"
+#include "request_handler_kafka_notify.h"
 
 #include "request_handler_file_process.h"
 #include "request_handler_db_write.h"
@@ -23,7 +24,7 @@ namespace asapo {
 
 class RequestFactory {
   public:
-    explicit RequestFactory (SharedCache cache);
+    explicit RequestFactory (SharedCache cache, KafkaClient* kafka_client);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
     virtual ~RequestFactory() = default;
@@ -45,6 +46,7 @@ class RequestFactory {
     RequestHandlerInitialAuthorization request_handler_initial_authorize_{&shared_auth_cache_};
     RequestHandlerSecondaryAuthorization request_handler_secondary_authorize_{&shared_auth_cache_};
     RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};
+    RequestHandlerKafkaNotify request_handler_kafka_notify_;
     SharedCache cache_;
     AuthorizationData shared_auth_cache_;
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
