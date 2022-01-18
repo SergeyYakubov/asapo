@@ -18,7 +18,9 @@ func GetObjectID(t *testing.T) (xid.ID, error) {
 func TestGetNewGroup(t *testing.T) {
 	statistics.Reset()
 	logger.SetMockLog()
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("generated new group")))
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("guid")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("generated new group")))
+
 
 	id1, err := GetObjectID(t)
 	assert.Nil(t, err, "first is ObjectID")

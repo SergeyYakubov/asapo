@@ -387,3 +387,21 @@ func TestGetBeamtimeInfo(t *testing.T) {
 	}
 
 }
+
+func TestExpiredToken(t *testing.T) {
+	Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"), utils.NewJWTAuth("secret_admin"), utils.NewJWTAuth("secret"))
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzU3NTMxMDksImp0aSI6ImMyOTR0NWFodHY1am9vZHVoaGNnIiwic3ViIjoiYnRfMTEwMTIxNzEiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlcyI6WyJyZWFkIiwid3JpdGUiXX19.kITePbv_dXY2ACxpAQ-PeQJPQtnR02bMoFrXq0Pbcm0"
+	request := authorizationRequest{"asapo_test%%"+token, "host"}
+	creds, _ := getSourceCredentials(request)
+
+	creds.Token = token
+	creds.DataSource = "test"
+	creds.BeamtimeId = "11012171"
+	creds.Beamline = "p21.2"
+	_, err := authorizeByToken(creds)
+	assert.Error(t, err, "")
+	if (err!=nil) {
+		assert.Contains(t, err.Error(), "expired")
+	}
+
+}

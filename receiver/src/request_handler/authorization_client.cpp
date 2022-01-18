@@ -22,15 +22,16 @@ Error ErrorFromAuthorizationServerResponse(Error err, const std::string response
     if (err) {
         return_err = asapo::ReceiverErrorTemplates::kInternalServerError.Generate(
             "cannot authorize request");
+        return_err->AddDetails("response", response);
         return_err->SetCause(std::move(err));
     } else {
         if (code != HttpCode::Unauthorized) {
             return_err = asapo::ReceiverErrorTemplates::kInternalServerError.Generate();
-            return_err->AddContext("response", response)->AddContext("errorCode", std::to_string(int(
-                code)));
         } else {
             return_err = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
         }
+        return_err->AddDetails("response", response)->AddDetails("errorCode", std::to_string(int(
+            code)));
     }
     return return_err;
 }
@@ -45,7 +46,7 @@ Error CheckAccessType(SourceType source_type, const std::vector<std::string> &ac
         for (size_t i = 0; i < access_types.size(); i++) {
             types += (i > 0 ? "," : "") + access_types[i];
         }
-        err->AddContext("expected", source_type == SourceType::kProcessed ? "write" : "writeraw")->AddContext("have",
+        err->AddDetails("expected", source_type == SourceType::kProcessed ? "write" : "writeraw")->AddDetails("have",
                                                                                                               types);
         return err;
     }
@@ -56,6 +57,7 @@ Error ParseServerResponse(const std::string &response,
                           std::vector<std::string> *access_types,
                           AuthorizationData *data) {
     Error err;
+
     AuthorizationData creds;
     JsonStringParser parser{response};
     std::string stype;
@@ -69,7 +71,7 @@ Error ParseServerResponse(const std::string &response,
         (err = GetSourceTypeFromString(stype, &data->source_type)) ||
         (err = parser.GetString("beamline", &data->beamline));
     if (err) {
-        return ErrorFromAuthorizationServerResponse(std::move(err), "", code);
+        return ErrorFromAuthorizationServerResponse(std::move(err), response, code);
     }
     return nullptr;
 }
@@ -82,7 +84,7 @@ Error UpdateDataFromServerResponse(const std::string &response, HttpCode code, A
     err = ParseServerResponse(response, code, &access_types, data);
     if (err) {
         *data = old_data;
-        return ErrorFromAuthorizationServerResponse(std::move(err), response, code);
+        return err;
     }
 
     err = CheckAccessType(data->source_type, access_types);

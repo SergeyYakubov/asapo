@@ -87,7 +87,7 @@ TEST_F(ReceiveMetaDataHandlerTests, CheckStatisticEntity) {
 TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsErrorOnMetaDataReceive) {
     ExpectReceiveMetaData(false);
     auto err = handler.ProcessRequest(request.get());
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsOK) {

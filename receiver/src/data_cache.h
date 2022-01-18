@@ -21,10 +21,10 @@ struct CacheMeta {
 class DataCache {
   public:
     explicit DataCache(uint64_t cache_size_gb, float keepunlocked_ratio);
-    VIRTUAL void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta);
-    VIRTUAL void* GetSlotToReadAndLock(uint64_t id, uint64_t data_size, CacheMeta** meta);
-    VIRTUAL bool UnlockSlot(CacheMeta* meta);
-    VIRTUAL ~DataCache() = default;
+    ASAPO_VIRTUAL void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta);
+    ASAPO_VIRTUAL void* GetSlotToReadAndLock(uint64_t id, uint64_t data_size, CacheMeta** meta);
+    ASAPO_VIRTUAL bool UnlockSlot(CacheMeta* meta);
+    ASAPO_VIRTUAL ~DataCache() = default;
   private:
     uint64_t cache_size_;
     float keepunlocked_ratio_;

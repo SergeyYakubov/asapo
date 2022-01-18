@@ -46,7 +46,10 @@ func routeIntrospect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug("verified user token for "+response.Sub)
+	log.WithFields(map[string]interface{}{
+		"subject":response.Sub,
+	}).Debug("verified user token")
+
 
 	answer,_ := json.Marshal(&response)
 	w.WriteHeader(http.StatusOK)

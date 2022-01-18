@@ -26,56 +26,56 @@ class RequestHandlerDbCheckRequest;
 
 class Request {
   public:
-    VIRTUAL Error Handle(ReceiverStatistics*);
-    VIRTUAL ~Request() = default;
+    ASAPO_VIRTUAL Error Handle(ReceiverStatistics*);
+    ASAPO_VIRTUAL ~Request() = default;
     Request() = delete;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
             DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler);
-    VIRTUAL void AddHandler(const ReceiverRequestHandler*);
-    VIRTUAL const RequestHandlerList& GetListHandlers() const;
-    VIRTUAL uint64_t GetDataSize() const;
-    VIRTUAL uint64_t GetMetaDataSize() const;
-    VIRTUAL uint64_t GetDataID() const;
-    VIRTUAL std::string GetFileName() const;
-    VIRTUAL std::string GetStream() const;
-    VIRTUAL std::string GetApiVersion() const;
-    VIRTUAL void* GetData() const;
-    VIRTUAL Opcode GetOpCode() const;
-    VIRTUAL const char* GetMessage() const;
+    ASAPO_VIRTUAL void AddHandler(const ReceiverRequestHandler*);
+    ASAPO_VIRTUAL const RequestHandlerList& GetListHandlers() const;
+    ASAPO_VIRTUAL uint64_t GetDataSize() const;
+    ASAPO_VIRTUAL uint64_t GetMetaDataSize() const;
+    ASAPO_VIRTUAL uint64_t GetDataID() const;
+    ASAPO_VIRTUAL std::string GetFileName() const;
+    ASAPO_VIRTUAL std::string GetStream() const;
+    ASAPO_VIRTUAL std::string GetApiVersion() const;
+    ASAPO_VIRTUAL void* GetData() const;
+    ASAPO_VIRTUAL Opcode GetOpCode() const;
+    ASAPO_VIRTUAL const char* GetMessage() const;
 
-    VIRTUAL const std::string& GetOriginUri() const;
-    VIRTUAL const std::string& GetOriginHost() const;
-    VIRTUAL const std::string& GetMetaData() const;
-    VIRTUAL const std::string& GetBeamtimeId() const;
-    VIRTUAL void SetBeamtimeId(std::string beamtime_id);
-    VIRTUAL void SetBeamline(std::string beamline);
+    ASAPO_VIRTUAL const std::string& GetOriginUri() const;
+    ASAPO_VIRTUAL const std::string& GetOriginHost() const;
+    ASAPO_VIRTUAL const std::string& GetMetaData() const;
+    ASAPO_VIRTUAL const std::string& GetBeamtimeId() const;
+    ASAPO_VIRTUAL void SetBeamtimeId(std::string beamtime_id);
+    ASAPO_VIRTUAL void SetBeamline(std::string beamline);
 
-    VIRTUAL void SetSourceType(SourceType);
-    VIRTUAL SourceType GetSourceType() const;
+    ASAPO_VIRTUAL void SetSourceType(SourceType);
+    ASAPO_VIRTUAL SourceType GetSourceType() const;
 
-    VIRTUAL const std::string& GetDataSource() const;
-    VIRTUAL void SetDataSource(std::string data_source);
-    VIRTUAL void SetMetadata(std::string metadata);
+    ASAPO_VIRTUAL const std::string& GetDataSource() const;
+    ASAPO_VIRTUAL void SetDataSource(std::string data_source);
+    ASAPO_VIRTUAL void SetMetadata(std::string metadata);
 
-    VIRTUAL void SetOnlinePath(std::string facility);
-    VIRTUAL void SetOfflinePath(std::string path);
-    VIRTUAL const std::string& GetOnlinePath() const;
-    VIRTUAL const std::string& GetOfflinePath() const;
+    ASAPO_VIRTUAL void SetOnlinePath(std::string facility);
+    ASAPO_VIRTUAL void SetOfflinePath(std::string path);
+    ASAPO_VIRTUAL const std::string& GetOnlinePath() const;
+    ASAPO_VIRTUAL const std::string& GetOfflinePath() const;
 
-    VIRTUAL const std::string& GetBeamline() const;
-    VIRTUAL const CustomRequestData& GetCustomData() const;
-    VIRTUAL Error PrepareDataBufferAndLockIfNeeded();
-    VIRTUAL void UnlockDataBufferIfNeeded();
-    VIRTUAL  SocketDescriptor GetSocket() const ;
+    ASAPO_VIRTUAL const std::string& GetBeamline() const;
+    ASAPO_VIRTUAL const CustomRequestData& GetCustomData() const;
+    ASAPO_VIRTUAL Error PrepareDataBufferAndLockIfNeeded();
+    ASAPO_VIRTUAL void UnlockDataBufferIfNeeded();
+    ASAPO_VIRTUAL  SocketDescriptor GetSocket() const ;
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
-    VIRTUAL uint64_t GetSlotId() const;
-    VIRTUAL bool WasAlreadyProcessed() const;
-    VIRTUAL void SetAlreadyProcessedFlag();
-    VIRTUAL void SetResponseMessage(std::string message, ResponseMessageType type);
-    VIRTUAL ResponseMessageType GetResponseMessageType() const;
-    VIRTUAL const std::string& GetResponseMessage() const;
-    VIRTUAL Error CheckForDuplicates();
+    ASAPO_VIRTUAL uint64_t GetSlotId() const;
+    ASAPO_VIRTUAL bool WasAlreadyProcessed() const;
+    ASAPO_VIRTUAL void SetAlreadyProcessedFlag();
+    ASAPO_VIRTUAL void SetResponseMessage(std::string message, ResponseMessageType type);
+    ASAPO_VIRTUAL ResponseMessageType GetResponseMessageType() const;
+    ASAPO_VIRTUAL const std::string& GetResponseMessage() const;
+    ASAPO_VIRTUAL Error CheckForDuplicates();
   private:
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;

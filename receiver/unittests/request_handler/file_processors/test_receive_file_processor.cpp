@@ -27,7 +27,7 @@ class ReceiveFileProcessorTests : public Test {
   public:
     ReceiveFileProcessor processor;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequest> mock_request;
+    std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     SocketDescriptor expected_socket_id = SocketDescriptor{1};
     std::string expected_file_name = std::string("processed") + asapo::kPathSeparator + std::string("2");
@@ -54,8 +54,10 @@ class ReceiveFileProcessorTests : public Test {
         asapo::ReceiverConfig test_config;
         asapo::SetReceiverConfig(test_config, "none");
         processor.log__ = &mock_logger;
-        mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr});
         processor.io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
+
     }
     void TearDown() override {
         processor.io__.release();
@@ -118,8 +120,6 @@ TEST_F(ReceiveFileProcessorTests, WritesToLog) {
     .WillOnce(Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("received file"),
-                                         HasSubstr(expected_file_name),
-                                         HasSubstr(expected_beamtime_id),
                                          HasSubstr(std::to_string(expected_file_size))
                                         )
                                   )

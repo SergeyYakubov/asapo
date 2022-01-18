@@ -22,5 +22,5 @@ else ()
 endif()
 
 add_integration_test(${TARGET_NAME} writetwice "test_file ok dummy" nomem)
-add_integration_test(${TARGET_NAME} dirnoaccess "test_noaccess/test_file error error:Permissiondenied,context:name:test_noaccess/test_file" nomem)
+add_integration_test(${TARGET_NAME} dirnoaccess "test_noaccess/test_file error error:permissiondenied,details:name:test_noaccess/test_file" nomem)
 

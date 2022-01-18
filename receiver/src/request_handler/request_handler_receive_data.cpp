@@ -18,8 +18,16 @@ Error RequestHandlerReceiveData::ProcessRequest(Request* request) const {
     if (err) {
         return err;
     }
-    io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &err);
+    Error io_err;
+    io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &io_err);
+    if (io_err) {
+        err = ReceiverErrorTemplates::kProcessingError.Generate("cannot receive data",std::move(io_err));
+    }
     request->UnlockDataBufferIfNeeded();
+    if (err == nullptr) {
+        log__->Debug(RequestLog("received request data", request).Append("size",request->GetDataSize()));
+    }
+
     return err;
 }
 

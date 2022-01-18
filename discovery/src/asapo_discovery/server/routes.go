@@ -15,12 +15,15 @@ func getService(service string) (answer []byte, code int) {
 		answer, err = requestHandler.GetSingleService(service)
 
 	}
-	log_str := "processing get " + service
+	log_str := "processing get " + service + " request"
 	if err != nil {
 		logger.Error(log_str + " - " + err.Error())
 		return []byte(err.Error()), http.StatusInternalServerError
 	}
-	logger.Debug(log_str + " -  got " + string(answer))
+	logger.WithFields(map[string]interface{}{
+		"service": service,
+		"answer":  string(answer),
+	}).Debug("processing get service request")
 	return answer, http.StatusOK
 }
 
@@ -39,7 +42,6 @@ func validateProtocol(w http.ResponseWriter, r *http.Request, client string) boo
 		logger.Error(log_str + " - " + hint)
 		return false
 	}
-	logger.Debug(log_str + " - ok")
 	return true
 }
 

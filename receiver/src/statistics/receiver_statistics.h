@@ -17,8 +17,8 @@ static const std::vector<std::string> kStatisticEntityNames = {"db_share", "disk
 class ReceiverStatistics : public Statistics {
   public:
     ReceiverStatistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
-    VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
-    VIRTUAL void StopTimer() noexcept;
+    ASAPO_VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
+    ASAPO_VIRTUAL void StopTimer() noexcept;
   private:
     StatisticsToSend PrepareStatisticsToSend() const noexcept override;
     void ResetStatistics() noexcept override;

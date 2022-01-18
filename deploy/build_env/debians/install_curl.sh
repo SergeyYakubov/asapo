@@ -2,7 +2,7 @@
 
 mkdir -p $1
 cd $1
-wget https://curl.haxx.se/download/curl-7.58.0.tar.gz
+wget --no-check-certificate https://curl.haxx.se/download/curl-7.58.0.tar.gz
 tar xzf curl-7.58.0.tar.gz
 cd curl-7.58.0
 ./configure --without-ssl --disable-shared --disable-manual --disable-ares  \

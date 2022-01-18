@@ -125,7 +125,10 @@ func routeFolderToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug("generated folder token for beamtime " + request.BeamtimeId + ", folder " + request.Folder)
+	log.WithFields(map[string]interface{}{
+		"folder":request.Folder,
+		"beamtime":request.BeamtimeId,
+	}).Debug("issued folder token")
 
 	answer := folderTokenResponce(token)
 	w.WriteHeader(http.StatusOK)

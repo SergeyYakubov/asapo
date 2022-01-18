@@ -32,8 +32,8 @@ const uint32_t kInotifyWatchFlags  = IN_CLOSE_WRITE |
 
 class SystemFolderWatch {
   public:
-    VIRTUAL Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders);
-    VIRTUAL FilesToSend GetFileList(Error* err);
+    ASAPO_VIRTUAL Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders);
+    ASAPO_VIRTUAL FilesToSend GetFileList(Error* err);
     SystemFolderWatch();
     std::unique_ptr<IO> io__;
     std::unique_ptr<Inotify> inotify__;

@@ -14,6 +14,6 @@ func routeCreateGroupID(w http.ResponseWriter, r *http.Request) {
 
 	guid := xid.New()
 	w.Write([]byte(guid.String()))
-	logger.Debug("generated new group: " + guid.String())
+	logger.WithFields(map[string]interface{}{"guid":guid.String()}).Debug("generated new group")
 	statistics.IncreaseCounter()
 }
