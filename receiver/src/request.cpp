@@ -1,53 +1,70 @@
 #include "request.h"
 #include "asapo/io/io_factory.h"
 #include "request_handler/request_handler_db_check_request.h"
+#include "receiver_logger.h"
 
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
                  SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache,
                  const RequestHandlerDbCheckRequest* db_check_handler) : io__{GenerateDefaultIO()},
-    cache__{cache}, request_header_(header),
+    cache__{cache}, log__{GetDefaultReceiverLogger()},request_header_(header),
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
     check_duplicate_request_handler_{db_check_handler} {
     origin_host_ = HostFromUri(origin_uri_);
 }
 
+Error Request::PrepareDataBufferFromMemory() {
+    try {
+        data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
+    } catch(std::exception& e) {
+        auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(
+            std::string("cannot allocate memory for request"));
+        err->AddDetails("reason", e.what())->AddDetails("size", std::to_string(request_header_.data_size));
+        return err;
+    }
+    return nullptr;
+}
+
+Error Request::PrepareDataBufferFromCache() {
+    Error err;
+    CacheMeta* slot;
+    data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot, &err);
+    if (err == nullptr) {
+        slot_meta_ = slot;
+    } else {
+        err->AddDetails("size", std::to_string(request_header_.data_size));
+        return err;
+    }
+    return nullptr;
+}
+
+
 Error Request::PrepareDataBufferAndLockIfNeeded() {
     if (cache__ == nullptr) {
-        try {
-            data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
-        } catch(std::exception& e) {
-            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(
-                std::string("cannot allocate memory for request"));
-            err->AddDetails("reason", e.what())->AddDetails("size", std::to_string(request_header_.data_size));
-            return err;
-        }
-    } else {
-        CacheMeta* slot;
-        data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot);
-        if (data_ptr) {
-            slot_meta_ = slot;
-        } else {
-            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
-            err->AddDetails("size", std::to_string(request_header_.data_size));
-            return err;
-        }
+        return PrepareDataBufferFromMemory();
+    }
+    auto err = PrepareDataBufferFromCache();
+    if (err) {
+        log__->Warning(LogMessageWithFields(err).Append(RequestLog("", this)));
+        return PrepareDataBufferFromMemory();
     }
     return nullptr;
 }
 
 
 Error Request::Handle(ReceiverStatistics* statistics) {
+    Error err;
     for (auto handler : handlers_) {
         statistics->StartTimer(handler->GetStatisticEntity());
-        auto err = handler->ProcessRequest(this);
+        err = handler->ProcessRequest(this);
         if (err) {
-            return err;
+            break;
         }
         statistics->StopTimer();
     }
-    return nullptr;
+    UnlockDataBufferIfNeeded();
+    return err;
 }
 
 const RequestHandlerList& Request::GetListHandlers() const {

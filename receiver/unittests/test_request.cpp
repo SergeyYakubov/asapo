@@ -71,6 +71,7 @@ class RequestTests : public Test {
                   Return(0)
                  ));
     }
+    void MockAllocateRequestSlot();
     void TearDown() override {
         request->io__.release();
     }
@@ -78,8 +79,19 @@ class RequestTests : public Test {
 };
 
 
-TEST_F(RequestTests, HandleProcessesRequests) {
+void RequestTests::MockAllocateRequestSlot()
+{
+    request->cache__ = &mock_cache;
+    asapo::CacheMeta meta;
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, _)).WillOnce(
+        DoAll(SetArgPointee<1>(&meta),
+              SetArgPointee<2>(nullptr),
+              Return(&mock_cache)
+        ));
+    request->PrepareDataBufferAndLockIfNeeded();
+}
 
+TEST_F(RequestTests, HandleProcessesRequests) {
     MockReqestHandler mock_request_handler;
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
@@ -88,13 +100,13 @@ TEST_F(RequestTests, HandleProcessesRequests) {
         Return(new asapo::IOError("Test Send Error", "", asapo::IOErrorType::kUnknownIOError))
     );
 
+    MockAllocateRequestSlot();
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
 
     EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kDisk)).Times(2);
-
     EXPECT_CALL(mock_statistics, StopTimer_t()).Times(1);
-
+    EXPECT_CALL(mock_cache, UnlockSlot(_));
 
     auto err = request->Handle(stat);
 
