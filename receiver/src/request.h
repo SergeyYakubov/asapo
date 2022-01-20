@@ -12,6 +12,7 @@
 #include "data_cache.h"
 
 #include "asapo/preprocessor/definitions.h"
+#include "asapo/logger/logger.h"
 
 namespace asapo {
 
@@ -76,7 +77,10 @@ class Request {
     ASAPO_VIRTUAL ResponseMessageType GetResponseMessageType() const;
     ASAPO_VIRTUAL const std::string& GetResponseMessage() const;
     ASAPO_VIRTUAL Error CheckForDuplicates();
-  private:
+    const AbstractLogger* log__;
+ private:
+    Error PrepareDataBufferFromMemory();
+    Error PrepareDataBufferFromCache();
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     MessageData data_buffer_;

@@ -121,10 +121,17 @@ class MockRequest: public Request {
 class MockDataCache: public DataCache {
   public:
     MockDataCache(): DataCache(0, 0) {};
-    MOCK_METHOD(void*, GetFreeSlotAndLock, (uint64_t size, CacheMeta** meta), (override));
+
+    void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta, Error* err) override{
+      ErrorInterface* error = nullptr;
+      auto data = GetFreeSlotAndLock_t(size, meta, &error);
+      err->reset(error);
+      return data;
+    }
+
+    MOCK_METHOD(void*, GetFreeSlotAndLock_t, (uint64_t size, CacheMeta** meta,ErrorInterface** err));
     MOCK_METHOD(bool, UnlockSlot, (CacheMeta* meta), (override));
     MOCK_METHOD(void*, GetSlotToReadAndLock, (uint64_t id, uint64_t data_size, CacheMeta** meta), (override));
-
 };
 
 

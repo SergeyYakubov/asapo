@@ -122,12 +122,11 @@ TEST_F(ReceiveDataHandlerTests, HandleGetsMemoryFromCache) {
     request->cache__ = &mock_cache;
     asapo::CacheMeta meta;
     meta.id = expected_slot_id;
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, _)).WillOnce(
         DoAll(SetArgPointee<1>(&meta),
+              SetArgPointee<2>(nullptr),
               Return(&mock_cache)
              ));
-
-    EXPECT_CALL(mock_cache, UnlockSlot(&meta));
 
     auto err = handler.ProcessRequest(request.get());
 
@@ -138,17 +137,15 @@ TEST_F(ReceiveDataHandlerTests, HandleGetsMemoryFromCache) {
 TEST_F(ReceiveDataHandlerTests, ErrorGetMemoryFromCache) {
     request->cache__ = &mock_cache;
 
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
-        Return(nullptr)
-    );
-
-    EXPECT_CALL(mock_cache, UnlockSlot(_)).Times(0);
-
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _,_)).WillOnce(
+        DoAll(SetArgPointee<2>(asapo::ReceiverErrorTemplates::kProcessingError.Generate().release()),
+              Return(nullptr)
+        ));
 
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(request->GetSlotId(), Eq(0));
-    ASSERT_THAT(err, Eq(asapo::GeneralErrorTemplates::kMemoryAllocationError));
+    ASSERT_THAT(err, Eq(nullptr));
 }
 
 
