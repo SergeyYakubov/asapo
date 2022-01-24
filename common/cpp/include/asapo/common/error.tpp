@@ -48,7 +48,7 @@ std::string ServiceError<ServiceErrorType>::ExplainPretty(uint8_t shift) const n
     }
     if (cause_err_ != nullptr) {
         err += "\n" + base_shift + shift_s + "caused by: ";
-        err += "\n" + base_shift + shift_s + cause_err_->ExplainPretty(shift + 2);
+        err += "\n" + base_shift + shift_s + cause_err_->ExplainPretty(static_cast<uint8_t>(shift + 2));
     }
     return err;
 }
