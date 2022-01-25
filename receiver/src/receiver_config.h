@@ -7,6 +7,7 @@
 
 #include "receiver_data_server/receiver_data_server_config.h"
 #include "metrics/receiver_metrics_config.h"
+#include "asapo/kafka_client/kafka_config.h"
 
 namespace asapo {
 
@@ -28,6 +29,7 @@ struct ReceiverConfig {
     ReceiverDataServerConfig dataserver;
     ReceiverMetricsConfig metrics;
     std::string discovery_server;
+    KafkaClientConfig kafka_config;
 };
 
 class ReceiverConfigManager {

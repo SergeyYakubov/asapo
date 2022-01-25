@@ -13,7 +13,8 @@ enum class ReceiverErrorType {
     kReAuthorizationFailure,
     kWarningDuplicatedRequest,
     kUnsupportedClient,
-    kProcessingError
+    kProcessingError,
+    kCacheAllocationError
 };
 
 using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType>;
@@ -38,6 +39,9 @@ auto const kProcessingError = ReceiverErrorTemplate {
     "processing error", ReceiverErrorType::kProcessingError
 };
 
+auto const kCacheAllocationError = ReceiverErrorTemplate {
+    "cache allocation error", ReceiverErrorType::kCacheAllocationError
+};
 
 auto const kBadRequest = ReceiverErrorTemplate {
     "Bad request", ReceiverErrorType::kBadRequest

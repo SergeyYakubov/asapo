@@ -9,6 +9,7 @@
 #include "request_handler_db_delete_stream.h"
 #include "request_handler_db_get_meta.h"
 #include "request_handler_monitoring.h"
+#include "request_handler_kafka_notify.h"
 
 #include "request_handler_file_process.h"
 #include "request_handler_db_write.h"
@@ -24,7 +25,7 @@ namespace asapo {
 
 class RequestFactory {
   public:
-    explicit RequestFactory (SharedReceiverMonitoringClient monitoring, SharedCache cache);
+    explicit RequestFactory (SharedReceiverMonitoringClient monitoring, SharedCache cache, KafkaClient* kafka_client);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri,
                                                      const SharedInstancedStatistics& statistics, Error* err) const noexcept;
@@ -44,7 +45,7 @@ class RequestFactory {
     RequestHandlerReceiveData request_handler_receivedata_;
     RequestHandlerReceiveMetaData request_handler_receive_metadata_;
     RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionNamePrefix};
-    RequestHandlerMonitoring request_handler_monitoring_{monitoring_};
+    RequestHandlerMonitoring request_handler_monitoring_;
     RequestHandlerDbStreamInfo request_handler_db_stream_info_{kDBDataCollectionNamePrefix};
     RequestHandlerDbDeleteStream request_handler_delete_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbLastStream request_handler_db_last_stream_{kDBDataCollectionNamePrefix};
@@ -54,6 +55,7 @@ class RequestFactory {
     RequestHandlerSecondaryAuthorization request_handler_secondary_authorize_{&shared_auth_cache_};
     RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};
 
+    RequestHandlerKafkaNotify request_handler_kafka_notify_;
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
     Error AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,
                                         const GenericRequestHeader& request_header) const;

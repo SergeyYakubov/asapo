@@ -137,12 +137,18 @@ class MockRequest: public Request {
 class MockDataCache: public DataCache {
   public:
     MockDataCache(): DataCache(0, 0) {};
-    MOCK_METHOD(void*, GetFreeSlotAndLock, (uint64_t size, CacheMeta** meta, std::string beamtime, std::string source, std::string stream), (override));
+    void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,std::string beamtime, std::string source, std::string stream, Error* err) override{
+      ErrorInterface* error = nullptr;
+      auto data = GetFreeSlotAndLock_t(size, meta,beamtime,source,stream, &error);
+      err->reset(error);
+      return data;
+    }
+
+    MOCK_METHOD(void*, GetFreeSlotAndLock_t, (uint64_t size, CacheMeta** meta,std::string beamtime, std::string source, std::string stream,ErrorInterface** err));
     MOCK_METHOD(bool, UnlockSlot, (CacheMeta* meta), (override));
     MOCK_CONST_METHOD0(AllMetaInfosAsVector, std::vector<std::shared_ptr<const CacheMeta>>());
     MOCK_CONST_METHOD0(GetCacheSize, uint64_t());
     MOCK_METHOD(void*, GetSlotToReadAndLock, (uint64_t id, uint64_t data_size, CacheMeta** meta), (override));
-
 };
 
 class MockStatisticsSender: public StatisticsSender {

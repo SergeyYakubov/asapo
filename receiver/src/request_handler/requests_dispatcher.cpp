@@ -8,14 +8,16 @@
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
-                                       ReceiverStatistics* statistics, SharedReceiverMonitoringClient monitoring, SharedCache cache) : statistics__{statistics},
+                                       ReceiverStatistics* statistics,SharedReceiverMonitoringClient monitoring, SharedCache cache,KafkaClient* kafka_client) : statistics__{statistics},
     io__{GenerateDefaultIO()},
     log__{
     GetDefaultReceiverLogger()},
 request_factory__{
     new RequestFactory{
-        std::move(monitoring), std::move(cache)}}, socket_fd_{socket_fd},
-producer_uri_{std::move(address)} {
+        std::move(monitoring),cache,kafka_client}},
+socket_fd_{socket_fd},
+producer_uri_{
+    std::move(address)} {
 }
 
 NetworkErrorCode GetNetworkCodeFromError(const Error& err) {

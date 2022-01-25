@@ -82,6 +82,9 @@ Error SetReceiverConfigWithError (const ReceiverConfig& config, std::string erro
     config_string += "," +  Key("AuthorizationServer", error_field) + "\"" + config.authorization_server + "\"";
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
+    config_string += "," +  Key("Kafka", error_field) + "{";
+    config_string += Key("Enabled", error_field) + (config.kafka_config.enabled ? "true" : "false") ;
+    config_string += "}";
     config_string += "}";
 
 
@@ -97,8 +100,7 @@ Error SetReceiverConfigWithError (const ReceiverConfig& config, std::string erro
 }
 
 void SetReceiverConfig (const ReceiverConfig& config, std::string error_field) {
-    auto err = SetReceiverConfigWithError(config, error_field);
-    ASSERT_THAT(err, Eq(nullptr));
+    SetReceiverConfigWithError(config, error_field);
 }
 
 }

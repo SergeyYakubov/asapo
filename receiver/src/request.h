@@ -13,6 +13,7 @@
 
 #include "asapo/preprocessor/definitions.h"
 #include "statistics/instanced_statistics_provider.h"
+#include "asapo/logger/logger.h"
 
 namespace asapo {
 
@@ -83,6 +84,10 @@ class Request {
     ASAPO_VIRTUAL const std::string& GetResponseMessage() const;
     ASAPO_VIRTUAL Error CheckForDuplicates();
     ASAPO_VIRTUAL SharedInstancedStatistics GetInstancedStatistics();
+    const AbstractLogger* log__;
+ private:
+    Error PrepareDataBufferFromMemory();
+    Error PrepareDataBufferFromCache();
   private:
     SharedInstancedStatistics statistics_;
     const GenericRequestHeader request_header_;

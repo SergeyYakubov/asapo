@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "receiver_error.h"
 
 namespace asapo {
 
@@ -22,7 +23,7 @@ DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size
     counter_ = static_cast<uint32_t>(rand() % 100 + 1);
 }
 
-void* DataCache::AllocateSlot(uint64_t size) {
+void* DataCache::AllocateSlot(uint64_t size,CacheMeta** blocking_meta) {
     auto tmp = cur_pointer_;
 
     if (cur_pointer_ + size > cache_size_) {
@@ -31,23 +32,30 @@ void* DataCache::AllocateSlot(uint64_t size) {
     auto addr = cache_.get() + cur_pointer_;
     cur_pointer_ += size;
 
-    if (!CleanOldSlots(size)) {
+    if (!CleanOldSlots(size,blocking_meta)) {
         cur_pointer_ = tmp;
         return nullptr;
     }
     return addr;
 }
 
-void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,
-                                    std::string beamtime, std::string source, std::string stream) {
+void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,std::string beamtime, std::string source, std::string stream,Error* err) {
     std::lock_guard<std::mutex> lock{mutex_};
     *meta = nullptr;
     if (!CheckAllocationSize(size)) {
+        *err = ReceiverErrorTemplates::kCacheAllocationError.Generate("size too large");
         return nullptr;
     }
-
-    auto addr = AllocateSlot(size);
+    CacheMeta* blocking_meta;
+    auto addr = AllocateSlot(size,&blocking_meta);
     if (!addr) {
+        *err =  ReceiverErrorTemplates::kCacheAllocationError.Generate("no slot available");
+        (*err)->AddDetails("curPointer",cur_pointer_)->AddDetails("cacheSize",cache_size_);
+        if (blocking_meta) {
+            (*err)->AddDetails("blockingMetaId",blocking_meta->id)->AddDetails("blockingMetaSize",blocking_meta->size);
+            uint64_t start_position = static_cast<uint64_t>((uint8_t*) blocking_meta->addr - cache_.get());
+            (*err)->AddDetails("starPosition",start_position);
+        }
         return nullptr;
     }
 
@@ -56,6 +64,7 @@ void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,
     *meta = new CacheMeta{id, addr, size, 1, std::move(beamtime), std::move(source), std::move(stream)};
     meta_.emplace_back(std::unique_ptr<CacheMeta> {*meta});
 
+    *err = nullptr;
     return addr;
 }
 
@@ -99,7 +108,8 @@ bool Intersects(uint64_t left1, uint64_t right1, uint64_t left2, uint64_t right2
     return (left1 >= left2 && left1 < right2) || (right1 <= right2 && right1 > left2);
 }
 
-bool DataCache::CleanOldSlots(uint64_t size) {
+bool DataCache::CleanOldSlots(uint64_t size,CacheMeta** blocking_meta) {
+    *blocking_meta = nullptr;
     int64_t last_del = -1;
     bool was_intersecting = false;
     for (uint64_t i = 0; i < meta_.size(); i++) {
@@ -115,7 +125,10 @@ bool DataCache::CleanOldSlots(uint64_t size) {
     }
 
     for (int i = 0; i <= last_del; i++) {
-        if (meta_[static_cast<unsigned long>(i)]->lock > 0) return false;
+        if (meta_[static_cast<unsigned long>(i)]->lock > 0)  {
+            *blocking_meta = meta_[static_cast<unsigned long>(i)].get();
+            return false;
+        }
     }
 
     if (last_del >= 0) {

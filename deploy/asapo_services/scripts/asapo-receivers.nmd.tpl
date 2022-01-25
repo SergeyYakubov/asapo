@@ -100,6 +100,8 @@ job "asapo-receivers" {
         receiver_network_modes = "${receiver_network_modes}"
         perf_monitor = "${perf_monitor}"
         receiver_expose_metrics = "${receiver_expose_metrics}"
+        receiver_kafka_enabled = "${receiver_kafka_enabled}"
+        receiver_kafka_metadata_broker_list = "${receiver_kafka_metadata_broker_list}"
       }
 
       template {

@@ -22,11 +22,12 @@ class Receiver {
     std::vector<std::unique_ptr<std::thread>> threads_;
     SharedCache cache_;
     SharedReceiverMonitoringClient monitoring_;
+    std::unique_ptr<KafkaClient> kafka_client_;
   public:
     static const int kMaxUnacceptedConnectionsBacklog;//TODO: Read from config
     Receiver(const Receiver&) = delete;
     Receiver& operator=(const Receiver&) = delete;
-    Receiver(SharedCache cache, asapo::SharedReceiverMonitoringClient monitoring);
+    Receiver(SharedCache cache,SharedReceiverMonitoringClient monitoring,KafkaClient* kafkaClient);
 
     void Listen(std::string listener_address, Error* err, bool exit_after_first_connection = false);
     std::unique_ptr<IO> io__;

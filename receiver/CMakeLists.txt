@@ -29,6 +29,7 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_check_request.cpp
         src/request_handler/request_handler_db_delete_stream.cpp
         src/request_handler/request_handler_db_get_meta.cpp
+        src/request_handler/request_handler_kafka_notify.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
         src/request_handler/request_handler_monitoring.cpp
@@ -126,11 +127,11 @@ set(SOURCE_FILES
 GET_PROPERTY(ASAPO_COMMON_FABRIC_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES)
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
-        $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool>)
+        $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:rdkafka_client>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
-target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR})
-target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} database
+target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR} ${RDKAFKA_INCLUDE_DIR})
+target_link_libraries(${TARGET_NAME} CURL::libcurl ${RDKAFKA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
 if (ENABLE_NEW_RECEIVER_MONITORING)
 target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
@@ -145,8 +146,14 @@ set_target_properties(${TARGET_NAME}-bin PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
         )
 
+if (WIN32)
+    file(GLOB KAFKA_DLLS "${RDKAFKA_BIN_DIR}/rdkafka*.dll")
+    file(COPY ${KAFKA_DLLS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 configure_file(docker/Dockerfile . COPYONLY)
 configure_file(docker/install_libfabric.sh . COPYONLY)
+configure_file(docker/install_rdkafka.sh . COPYONLY)
 
 
 ################################
@@ -180,6 +187,7 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_db_get_meta.cpp
         unittests/request_handler/test_request_handler_monitoring.cpp
 
+        unittests/request_handler/test_request_handler_kafka_notify.cpp
         unittests/statistics/test_statistics_sender_influx_db.cpp
         unittests/statistics/test_statistics_sender_fluentd.cpp
 

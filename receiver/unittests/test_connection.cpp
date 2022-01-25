@@ -15,7 +15,7 @@ using namespace asapo;
 namespace {
 
 TEST(Connection, Constructor) {
-    Connection connection{0, "some_address", nullptr, nullptr, "some_tag"};
+    Connection connection{0, "some_address", nullptr, nullptr,nullptr, "some_tag"};
     ASSERT_THAT(dynamic_cast<asapo::Statistics*>(connection.statistics__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(connection.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(connection.log__), Ne(nullptr));
@@ -25,7 +25,7 @@ TEST(Connection, Constructor) {
 
 class MockDispatcher: public asapo::RequestsDispatcher {
   public:
-    MockDispatcher(): asapo::RequestsDispatcher(0, "", nullptr, nullptr, nullptr) {};
+    MockDispatcher(): asapo::RequestsDispatcher(0, "", nullptr, nullptr, nullptr, nullptr) {};
     Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept override {
         return Error{ProcessRequest_t(request.get())};
     }
@@ -56,7 +56,7 @@ class ConnectionTests : public Test {
     void SetUp() override {
         asapo::SharedCache cache; /*nullptr*/
         mock_monitoring.reset(new NiceMock<asapo::MockReceiverMonitoringClient>);
-        connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, mock_monitoring, cache, "some_tag"}};
+        connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, mock_monitoring, cache,nullptr, "some_tag"}};
         connection->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         connection->statistics__ = std::unique_ptr<asapo::ReceiverStatistics> {&mock_statictics};
         connection->log__ = &mock_logger;

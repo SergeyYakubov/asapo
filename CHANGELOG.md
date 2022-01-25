@@ -9,6 +9,9 @@ IMPROVEMENTS
 BUG FIXES
 * Producer API: fixed bug segfault in Python code when sending data object which memory is from some other object
 
+INTERNAL
+* Do not return error when memory cache is not allocatable - just write to disk
+
 
 ## 21.12.0
 

@@ -29,7 +29,7 @@ class Connection {
     int socket_fd_;
   public:
 
-    Connection(SocketDescriptor socket_fd, const std::string& address, SharedReceiverMonitoringClient monitoring, SharedCache cache, const std::string& receiver_tag);
+    Connection(SocketDescriptor socket_fd, const std::string& address, SharedReceiverMonitoringClient monitoring, SharedCache cache,KafkaClient* kafkaClient, std::string receiver_tag);
     ~Connection() = default;
 
     void Listen() const noexcept;

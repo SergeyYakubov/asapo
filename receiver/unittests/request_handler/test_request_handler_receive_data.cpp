@@ -132,44 +132,36 @@ TEST_F(ReceiveDataHandlerTests, HandleGetsMemoryFromCache) {
     request->cache__ = &mock_cache;
     asapo::CacheMeta meta;
     meta.id = expected_slot_id;
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _, expected_beamtime, expected_source, expected_stream)).WillOnce(
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, expected_beamtime, expected_source, expected_stream,_)).WillOnce(
         DoAll(SetArgPointee<1>(&meta),
+              SetArgPointee<5>(nullptr),
               Return(&mock_cache)
              ));
-
-    EXPECT_CALL(mock_cache, UnlockSlot(&meta));
-    /*
-    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, _, _)).WillOnce(
-            DoAll(
-                    CopyStr(expected_metadata),
-                    SetArgPointee<3>(nullptr),
-                    Return(0)
-                    ));
-    */
     EXPECT_CALL(*mock_instanced_statistics, AddIncomingBytes(0));
 
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
+    ASSERT_THAT(err, Eq(nullptr));
+
 }
 
 
 TEST_F(ReceiveDataHandlerTests, ErrorGetMemoryFromCache) {
     request->cache__ = &mock_cache;
 
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _, expected_beamtime, expected_source, expected_stream)).WillOnce(
-        Return(nullptr)
-    );
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, expected_beamtime, expected_source, expected_stream,_)).WillOnce(
+        DoAll(SetArgPointee<5>(asapo::ReceiverErrorTemplates::kProcessingError.Generate().release()),
+              Return(nullptr)
+    ));
 
-    EXPECT_CALL(mock_cache, UnlockSlot(_)).Times(0);
+    EXPECT_CALL(*mock_instanced_statistics, AddIncomingBytes(0));
 
 
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(request->GetSlotId(), Eq(0));
-    ASSERT_THAT(err, Eq(asapo::GeneralErrorTemplates::kMemoryAllocationError));
+    ASSERT_THAT(err, Eq(nullptr));
 }
-
-
 
 }

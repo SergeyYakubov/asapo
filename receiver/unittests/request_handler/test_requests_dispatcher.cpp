@@ -25,7 +25,7 @@ TEST(RequestDispatcher, Constructor) {
 
     auto monitoring = asapo::SharedReceiverMonitoringClient{new asapo::ReceiverMonitoringClientNoop{}};
 
-    RequestsDispatcher dispatcher{0,  "some_address", stat.get(), monitoring, cache};
+    RequestsDispatcher dispatcher{0,  "some_address", stat.get(), monitoring, cache, nullptr};
     ASSERT_THAT(dynamic_cast<const asapo::ReceiverStatistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
@@ -47,7 +47,7 @@ class MockRequest: public Request {
 
 class MockRequestFactory: public asapo::RequestFactory {
   public:
-    MockRequestFactory(): RequestFactory(nullptr, nullptr) {};
+    MockRequestFactory(): RequestFactory(nullptr, nullptr, nullptr) {};
     std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                              SocketDescriptor socket_fd, std::string origin_uri,
                                              const asapo::SharedInstancedStatistics& statistics,
@@ -94,7 +94,7 @@ class RequestsDispatcherTests : public Test {
         mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
         test_config.authorization_interval_ms = 0;
         SetReceiverConfig(test_config, "none");
-        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statistics, nullptr, nullptr}};
+        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statistics, nullptr, nullptr, nullptr}};
         dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         dispatcher->statistics__ = &mock_statistics;
         dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};

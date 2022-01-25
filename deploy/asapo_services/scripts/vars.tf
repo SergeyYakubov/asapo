@@ -58,6 +58,10 @@ variable "receiver_network_modes" {}
 
 variable "receiver_expose_metrics" {}
 
+variable "receiver_kafka_enabled" {}
+
+variable "receiver_kafka_metadata_broker_list" {}
+
 variable "grafana_total_memory_size" {}
 
 variable "influxdb_total_memory_size" {}

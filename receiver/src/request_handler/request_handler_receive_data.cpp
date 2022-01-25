@@ -24,7 +24,6 @@ Error RequestHandlerReceiveData::ProcessRequest(Request* request) const {
     if (io_err) {
         err = ReceiverErrorTemplates::kProcessingError.Generate("cannot receive data",std::move(io_err));
     }
-    request->UnlockDataBufferIfNeeded();
     if (err == nullptr) {
         log__->Debug(RequestLog("received request data", request).Append("size",request->GetDataSize()));
     }

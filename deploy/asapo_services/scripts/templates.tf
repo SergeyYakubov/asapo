@@ -57,6 +57,8 @@ data "template_file" "asapo_receivers" {
     force_pull_images = "${var.force_pull_images}"
     perf_monitor = "${var.perf_monitor}"
     receiver_expose_metrics = "${var.receiver_expose_metrics}"
+    receiver_kafka_enabled = "${var.receiver_kafka_enabled}"
+    receiver_kafka_metadata_broker_list = "${var.receiver_kafka_metadata_broker_list}"
   }
 }
 
