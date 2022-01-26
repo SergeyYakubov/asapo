@@ -18,7 +18,7 @@ static const std::vector<std::string> kStatisticEntityNames = {
 class ReceiverStatistics : public Statistics {
 public:
     ReceiverStatistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
-    void ApplyTimeFrom(const SharedInstancedStatistics& stats);
+    void ApplyTimeFrom(const RequestStatistics* stats);
 private:
     StatisticsToSend PrepareStatisticsToSend() const noexcept override;
     void ResetStatistics() noexcept override;

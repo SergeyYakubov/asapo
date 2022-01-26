@@ -52,10 +52,9 @@ class RequestTests : public Test {
     std::string expected_api_version = "v0.2";
     std::unique_ptr<Request> request;
     StrictMock<MockIO> mock_io;
-    std::shared_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+    StrictMock<asapo::MockInstancedStatistics>* mock_instanced_statistics;
     MockDataCache mock_cache;
     void SetUp() override {
-        mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.meta_size = expected_metadata_size;
@@ -63,7 +62,9 @@ class RequestTests : public Test {
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
         strcpy(generic_request_header.api_version, expected_api_version.c_str());
-        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr, mock_instanced_statistics });
+        mock_instanced_statistics = new StrictMock<asapo::MockInstancedStatistics>;
+        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr,
+                                  std::unique_ptr<asapo::MockInstancedStatistics> {mock_instanced_statistics}});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),

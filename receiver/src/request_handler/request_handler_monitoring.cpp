@@ -13,8 +13,10 @@ StatisticEntity RequestHandlerMonitoring::GetStatisticEntity() const {
 }
 
 Error RequestHandlerMonitoring::ProcessRequest(Request* request) const {
-    auto stats = request->GetInstancedStatistics();
-
+    auto stats = request->GetStatistics();
+    if (!stats) {
+        return nullptr;
+    }
     monitoring_->SendProducerToReceiverTransferDataPoint(
             request->GetPipelineStepId(),
             request->GetProducerInstanceId(),

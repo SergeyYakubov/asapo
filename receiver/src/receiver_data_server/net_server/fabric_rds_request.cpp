@@ -5,7 +5,7 @@
 using namespace asapo;
 
 FabricRdsRequest::FabricRdsRequest(const GenericRequestHeader& header,
-                                   fabric::FabricAddress sourceId, fabric::FabricMessageId messageId, SharedInstancedStatistics statistics)
+                                   fabric::FabricAddress sourceId, fabric::FabricMessageId messageId, RequestStatisticsPtr statistics)
                                    : ReceiverDataServerRequest(header, sourceId, std::move(statistics)), message_id{messageId} {
 
 }

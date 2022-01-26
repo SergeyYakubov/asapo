@@ -29,7 +29,7 @@ void ReceiverStatistics::ResetStatistics() noexcept {
     }
 }
 
-void ReceiverStatistics::ApplyTimeFrom(const SharedInstancedStatistics& stats) {
+void ReceiverStatistics::ApplyTimeFrom(const RequestStatistics* stats) {
     for (size_t i = 0; i < kNStatisticEntities; i++) {
         time_counters_[i] += stats->GetElapsed((StatisticEntity) i);
     }

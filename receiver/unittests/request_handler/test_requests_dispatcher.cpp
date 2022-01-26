@@ -40,8 +40,7 @@ class MockRequest: public Request {
         return Error{Handle_t()};
     };
     MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
-
-    MOCK_METHOD0(GetInstancedStatistics, asapo::SharedInstancedStatistics());
+    MOCK_METHOD0(GetStatistics, asapo::RequestStatistics*());
 };
 
 
@@ -50,17 +49,17 @@ class MockRequestFactory: public asapo::RequestFactory {
     MockRequestFactory(): RequestFactory(nullptr, nullptr, nullptr) {};
     std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                              SocketDescriptor socket_fd, std::string origin_uri,
-                                             const asapo::SharedInstancedStatistics& statistics,
+                                             asapo::RequestStatisticsPtr statistics,
                                              Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
-        auto res = GenerateRequest_t(request_header, socket_fd, origin_uri, statistics, &error);
+        auto res = GenerateRequest_t(request_header, socket_fd, origin_uri, statistics.get(), &error);
         err->reset(error);
         return std::unique_ptr<Request> {res};
     }
 
     MOCK_CONST_METHOD5(GenerateRequest_t, Request * (const GenericRequestHeader&,
                                                      SocketDescriptor, std::string,
-                                                     const asapo::SharedInstancedStatistics& statistics,
+                                                     const asapo::RequestStatistics* statistics,
                                                      ErrorInterface**));
 
 };
@@ -87,7 +86,7 @@ class RequestsDispatcherTests : public Test {
     std::unique_ptr<Request> request{&mock_request};
     GenericNetworkResponse response;
 
-    std::shared_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+    std::unique_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
 
 
     void SetUp() override {
@@ -141,8 +140,8 @@ class RequestsDispatcherTests : public Test {
             EXPECT_CALL(mock_logger, Warning(_));
         }
 
-        EXPECT_CALL(mock_request, GetInstancedStatistics()).WillRepeatedly(
-            Return(mock_instanced_statistics)
+        EXPECT_CALL(mock_request, GetStatistics()).WillRepeatedly(
+            Return(mock_instanced_statistics.get())
         );
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {

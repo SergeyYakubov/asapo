@@ -114,9 +114,9 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
 
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
         request_header, SocketDescriptor socket_fd, std::string origin_uri,
-                                                         const SharedInstancedStatistics& statistics, Error* err) const noexcept {
+                                                         RequestStatisticsPtr statistics, Error* err) const noexcept {
     auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get(),
-                                                         &request_handler_db_check_, statistics}
+                                                         &request_handler_db_check_, std::move(statistics)}
     };
     *err = AddHandlersToRequest(request, request_header);
     if (*err) {

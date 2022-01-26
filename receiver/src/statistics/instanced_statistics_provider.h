@@ -8,7 +8,7 @@
 
 namespace asapo {
 
-class InstancedStatistics {
+class RequestStatistics {
 private:
     std::chrono::system_clock::time_point current_timer_last_timepoint_;
     StatisticEntity current_statistic_entity_ = StatisticEntity::kDatabase;
@@ -29,11 +29,11 @@ public:
     ASAPO_VIRTUAL std::chrono::nanoseconds GetElapsed(StatisticEntity entity) const;
     ASAPO_VIRTUAL uint64_t GetElapsedMicrosecondsCount(StatisticEntity entity) const;
 
-    ASAPO_VIRTUAL ~InstancedStatistics() = default;
+    ASAPO_VIRTUAL ~RequestStatistics() = default;
 
 };
 
-using SharedInstancedStatistics = std::shared_ptr<asapo::InstancedStatistics>;
+using RequestStatisticsPtr = std::unique_ptr<RequestStatistics>;
 
 }
 

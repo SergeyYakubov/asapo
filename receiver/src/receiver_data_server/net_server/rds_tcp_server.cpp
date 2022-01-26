@@ -52,7 +52,7 @@ ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, 
     Error io_err;
     *err = nullptr;
 
-    SharedInstancedStatistics statistics{new InstancedStatistics};
+    RequestStatisticsPtr statistics{new RequestStatistics};
     statistics->StartTimer(kNetworkIncoming);
     uint64_t bytesReceived = io__->Receive(socket, &header, sizeof(GenericRequestHeader), &io_err);
     statistics->StopTimer();
@@ -67,7 +67,7 @@ ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, 
         (*err)->AddDetails("origin",io__->AddressFromSocket(socket));
         return nullptr;
     }
-    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket, statistics}};
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket, std::move(statistics)}};
 }
 
 GenericRequests RdsTcpServer::ReadRequests(const ListSocketDescriptors& sockets) {

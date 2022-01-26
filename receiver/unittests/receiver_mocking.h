@@ -32,7 +32,7 @@ class MockStatistics : public asapo::ReceiverStatistics {
 
 };
 
-class MockInstancedStatistics : public asapo::InstancedStatistics {
+class MockInstancedStatistics : public asapo::RequestStatistics {
 public:
     MOCK_METHOD1(StartTimer, void(StatisticEntity entity));
     MOCK_METHOD0(StopTimer, void());
@@ -71,7 +71,7 @@ class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
-                const RequestHandlerDbCheckRequest* db_check_handler, SharedInstancedStatistics statistics):
+                const RequestHandlerDbCheckRequest* db_check_handler, RequestStatisticsPtr statistics):
         Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler, std::move(statistics)) {};
 
 //    MOCK_METHOD(, ), (const,override), (override));
@@ -96,7 +96,7 @@ class MockRequest: public Request {
     MOCK_METHOD(const std::string &, GetOnlinePath, (), (const, override));
     MOCK_METHOD(const std::string &, GetOfflinePath, (), (const, override));
 
-    MOCK_METHOD0(GetInstancedStatistics, SharedInstancedStatistics());
+    MOCK_METHOD0(GetStatistics, RequestStatistics*());
 
     // not nice casting, but mocking GetCustomData directly does not compile on Windows.
     const CustomRequestData& GetCustomData() const override {

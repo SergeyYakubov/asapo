@@ -40,7 +40,7 @@ GenericRequests RdsFabricServer::GetNewRequests(Error* err) {
     fabric::FabricAddress srcAddress;
     fabric::FabricMessageId messageId;
 
-    SharedInstancedStatistics statistics{new InstancedStatistics};
+    RequestStatisticsPtr statistics{new RequestStatistics};
     // We cannot measure time here, since it is a blocking call :/
 
     GenericRequestHeader header;
@@ -49,7 +49,7 @@ GenericRequests RdsFabricServer::GetNewRequests(Error* err) {
         return {}; // empty result
     }
     statistics->AddIncomingBytes(sizeof(header));
-    auto requestPtr = new FabricRdsRequest(header, srcAddress, messageId, statistics);
+    auto requestPtr = new FabricRdsRequest(header, srcAddress, messageId, std::move(statistics));
 
     GenericRequests genericRequests;
     genericRequests.emplace_back(GenericRequestPtr(requestPtr));

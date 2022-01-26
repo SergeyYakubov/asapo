@@ -59,7 +59,9 @@ Error RequestsDispatcher::HandleRequest(const std::unique_ptr<Request>& request)
     log__->Debug(RequestLog("got new request", request.get()));
     Error handle_err;
     handle_err = request->Handle();
-    statistics__->ApplyTimeFrom(request->GetInstancedStatistics());
+    if (request->GetStatistics()) {
+        statistics__->ApplyTimeFrom(request->GetStatistics());
+    }
     if (handle_err) {
         if (handle_err == ReceiverErrorTemplates::kReAuthorizationFailure) {
             log__->Warning(LogMessageWithFields(handle_err).Append(RequestLog("", request.get())));
@@ -94,7 +96,7 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request
 std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
     GenericRequestHeader generic_request_header;
-    SharedInstancedStatistics statistics{new InstancedStatistics};
+    RequestStatisticsPtr statistics{new RequestStatistics};
 
     statistics->StartTimer(StatisticEntity::kNetworkIncoming);
     Error io_err;
@@ -107,7 +109,7 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
         return nullptr;
     }
     statistics->StopTimer();
-    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, statistics, err);
+    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, std::move(statistics), err);
     if (*err) {
         log__->Error(LogMessageWithFields(*err).Append("origin", HostFromUri(producer_uri_)));
     }

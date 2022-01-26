@@ -40,16 +40,17 @@ class ReceiveMetaDataHandlerTests : public Test {
     NiceMock<MockIO> mock_io;
     RequestHandlerReceiveMetaData handler;
     NiceMock<asapo::MockLogger> mock_logger;
-    std::shared_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+    StrictMock<asapo::MockInstancedStatistics>* mock_instanced_statistics;
 
     void SetUp() override {
-        mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr, mock_instanced_statistics});
+        mock_instanced_statistics = new StrictMock<asapo::MockInstancedStatistics>;
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr,
+                                  std::unique_ptr<asapo::MockInstancedStatistics>{mock_instanced_statistics}});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }

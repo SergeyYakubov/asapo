@@ -28,7 +28,7 @@ class RequestFactory {
     explicit RequestFactory (SharedReceiverMonitoringClient monitoring, SharedCache cache, KafkaClient* kafka_client);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri,
-                                                     const SharedInstancedStatistics& statistics, Error* err) const noexcept;
+                                                     RequestStatisticsPtr statistics, Error* err) const noexcept;
     virtual ~RequestFactory() = default;
   private:
     Error AddHandlersToRequest(std::unique_ptr<Request>& request,  const GenericRequestHeader& request_header) const;

@@ -37,7 +37,6 @@ TEST(RdsFabricServer, Constructor) {
 class RdsFabricServerTests : public Test {
   public:
     NiceMock<MockLogger> mock_logger;
-    std::shared_ptr<NiceMock<MockInstancedStatistics>> mock_instanced_statistics;
     StrictMock<MockIO> mock_io;
     StrictMock<fabric::MockFabricFactory> mock_fabric_factory;
     StrictMock<fabric::MockFabricServer> mock_fabric_server;
@@ -45,7 +44,6 @@ class RdsFabricServerTests : public Test {
     std::unique_ptr<RdsFabricServer> rds_server_ptr;
 
     void SetUp() override {
-        mock_instanced_statistics.reset(new NiceMock<MockInstancedStatistics>);
         mock_monitoring.reset(new StrictMock<MockReceiverMonitoringClient>);
         RdsFabricServer XX{expected_address, &mock_logger, mock_monitoring};
 
@@ -221,7 +219,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Ok) {
     InitServer();
 
     GenericRequestHeader dummyHeader{};
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, mock_instanced_statistics);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, nullptr);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
     cacheSlot.addr = (void*)0xABC;
@@ -239,7 +237,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_RdmaWrite_Error) {
     InitServer();
 
     GenericRequestHeader dummyHeader{};
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, mock_instanced_statistics);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, nullptr);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
     cacheSlot.addr = (void*)0xABC;
@@ -258,7 +256,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Send_Error) {
     InitServer();
 
     GenericRequestHeader dummyHeader{};
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, mock_instanced_statistics);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, nullptr);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
     cacheSlot.addr = (void*)0xABC;

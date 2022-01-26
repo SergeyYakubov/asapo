@@ -10,10 +10,10 @@ namespace asapo {
 Request::Request(const GenericRequestHeader& header,
                  SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache,
                  const RequestHandlerDbCheckRequest* db_check_handler,
-                 SharedInstancedStatistics statistics) : io__{GenerateDefaultIO()},
-                                                         cache__{cache}, log__{GetDefaultReceiverLogger()},statistics_{std::move(statistics)}, request_header_(header),
-                                                         socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
-                                                         check_duplicate_request_handler_{db_check_handler} {
+                 RequestStatisticsPtr statistics) : io__{GenerateDefaultIO()},
+                                                    cache__{cache}, log__{GetDefaultReceiverLogger()}, statistics_{std::move(statistics)}, request_header_(header),
+                                                    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
+                                                    check_duplicate_request_handler_{db_check_handler} {
     origin_host_ = HostFromUri(origin_uri_);
 }
 
@@ -59,9 +59,13 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
 Error Request::Handle() {
     Error err;
     for (auto handler : handlers_) {
-        statistics_->StartTimer(handler->GetStatisticEntity());
+        if (statistics_) {
+            statistics_->StartTimer(handler->GetStatisticEntity());
+        }
         err = handler->ProcessRequest(this);
-        statistics_->StopTimer();
+        if (statistics_) {
+            statistics_->StopTimer();
+        }
         if (err) {
             break;
         }
@@ -243,8 +247,12 @@ SourceType Request::GetSourceType() const {
     return source_type_;
 }
 
-SharedInstancedStatistics Request::GetInstancedStatistics() {
-    return statistics_;
+RequestStatistics* Request::GetStatistics() {
+    if (statistics_) {
+        return statistics_.get();
+    } else {
+        return nullptr;
+    }
 }
 
 const std::string& Request::GetOriginHost() const {

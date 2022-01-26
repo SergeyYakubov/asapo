@@ -43,17 +43,18 @@ class ReceiveDataHandlerTests : public Test {
     MockDataCache mock_cache;
     RequestHandlerReceiveData handler;
     NiceMock<asapo::MockLogger> mock_logger;
-    std::shared_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+    StrictMock<asapo::MockInstancedStatistics>* mock_instanced_statistics;
 
     void SetUp() override {
-        mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
         strcpy(generic_request_header.stream, expected_stream);
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr, mock_instanced_statistics});
+        mock_instanced_statistics = new StrictMock<asapo::MockInstancedStatistics>;
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr,
+                                  std::unique_ptr<asapo::MockInstancedStatistics>{mock_instanced_statistics}});
         request->SetBeamtimeId(expected_beamtime);
         request->SetPipelineStepId(expected_pipelinestepid);
         request->SetDataSource(expected_source);

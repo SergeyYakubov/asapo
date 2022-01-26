@@ -19,17 +19,17 @@ class MockNetServer : public RdsNetServer {
 
     GenericRequests GetNewRequests(Error* err) override {
         ErrorInterface* error = nullptr;
-        auto reqs = GetNewRequests_t(&error);
+        auto& reqs = GetNewRequests_t(&error);
         err->reset(error);
         GenericRequests res;
         for (const auto& preq : reqs) {
-            ReceiverDataServerRequestPtr ptr = ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{preq.header, preq.source_id, SharedInstancedStatistics{ new InstancedStatistics } }};
+            ReceiverDataServerRequestPtr ptr = ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{preq.header, preq.source_id, nullptr }};
             res.push_back(std::move(ptr));
         }
         return  res;
     }
 
-    MOCK_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
+    MOCK_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest>& (ErrorInterface**
                  error));
 
     Error SendResponse(const ReceiverDataServerRequest* request,

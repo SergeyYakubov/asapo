@@ -72,13 +72,13 @@ StatisticsToSend ReceiverStatisticTests::ExtractStat() {
 
 
 void ReceiverStatisticTests::TestTimer(const StatisticEntity& entity) {
-    asapo::SharedInstancedStatistics instancedStatistics{new asapo::InstancedStatistics};
+    asapo::RequestStatisticsPtr instancedStatistics{new asapo::RequestStatistics};
 
     instancedStatistics->StartTimer(entity);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     instancedStatistics->StopTimer();
 
-    statistics.ApplyTimeFrom(instancedStatistics);
+    statistics.ApplyTimeFrom(instancedStatistics.get());
 
     auto stat = ExtractStat();
 
@@ -108,7 +108,7 @@ TEST_F(ReceiverStatisticTests, TimerForMonitoring) {
 }
 
 TEST_F(ReceiverStatisticTests, ByteCounter) {
-    asapo::SharedInstancedStatistics instancedStatistics{new asapo::InstancedStatistics};
+    asapo::RequestStatisticsPtr instancedStatistics{new asapo::RequestStatistics};
 
     instancedStatistics->AddIncomingBytes(53);
     instancedStatistics->AddIncomingBytes(23);
@@ -121,7 +121,7 @@ TEST_F(ReceiverStatisticTests, ByteCounter) {
 }
 
 TEST_F(ReceiverStatisticTests, TimerForAll) {
-    asapo::SharedInstancedStatistics instancedStatistics{new asapo::InstancedStatistics};
+    asapo::RequestStatisticsPtr instancedStatistics{new asapo::RequestStatistics};
 
     // kDatabase
     instancedStatistics->StartTimer(StatisticEntity::kDatabase);
@@ -148,7 +148,7 @@ TEST_F(ReceiverStatisticTests, TimerForAll) {
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
     instancedStatistics->StopTimer();
 
-    statistics.ApplyTimeFrom(instancedStatistics);
+    statistics.ApplyTimeFrom(instancedStatistics.get());
 
     auto stat = ExtractStat();
 

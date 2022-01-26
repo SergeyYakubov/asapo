@@ -58,7 +58,7 @@ namespace {
 class RequestHandlerMonitoringTests : public Test {
   public:
     std::shared_ptr<StrictMock<asapo::MockReceiverMonitoringClient>> mock_monitoring;
-    std::shared_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+    std::unique_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
     std::unique_ptr<asapo::RequestHandlerMonitoring> handler;
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
@@ -78,14 +78,14 @@ class RequestHandlerMonitoringTests : public Test {
         mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
 
         GenericRequestHeader request_header;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, mock_instanced_statistics});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
         ON_CALL(*mock_request, GetPipelineStepId()).WillByDefault(ReturnRef(expected_pipeline_step_id));
         ON_CALL(*mock_request, GetProducerInstanceId()).WillByDefault(ReturnRef(expected_producer_instance_id));
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
         ON_CALL(*mock_request, GetDataSource()).WillByDefault(ReturnRef(expected_data_source));
         ON_CALL(*mock_request, GetStream()).WillByDefault(Return(expected_stream));
         ON_CALL(*mock_request, GetFileName()).WillByDefault(Return(expected_file_name));
-        ON_CALL(*mock_request, GetInstancedStatistics()).WillByDefault(Return(mock_instanced_statistics));
+        ON_CALL(*mock_request, GetStatistics()).WillByDefault(Return(mock_instanced_statistics.get()));
     }
     void TearDown() override {
     }

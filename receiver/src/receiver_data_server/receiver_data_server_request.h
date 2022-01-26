@@ -12,15 +12,14 @@ class RdsNetServer;
 
 class ReceiverDataServerRequest : public GenericRequest {
   private:
-
-    SharedInstancedStatistics statistics_;
+    RequestStatisticsPtr statistics_;
   public:
-    explicit ReceiverDataServerRequest(const GenericRequestHeader& header, uint64_t source_id, SharedInstancedStatistics statistics);
+    explicit ReceiverDataServerRequest(const GenericRequestHeader& header, uint64_t source_id, RequestStatisticsPtr statistics);
     ~ReceiverDataServerRequest() override = default;
 
     const uint64_t source_id;
 
-    SharedInstancedStatistics GetStatisticsProvider();
+    RequestStatistics* GetStatistics();
 };
 
 using ReceiverDataServerRequestPtr = std::unique_ptr<ReceiverDataServerRequest>;

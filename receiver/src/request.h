@@ -33,7 +33,7 @@ class Request {
     Request() = delete;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
             DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler,
-            SharedInstancedStatistics  statistics);
+            RequestStatisticsPtr  statistics);
     ASAPO_VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     ASAPO_VIRTUAL const RequestHandlerList& GetListHandlers() const;
     ASAPO_VIRTUAL uint64_t GetDataSize() const;
@@ -83,13 +83,13 @@ class Request {
     ASAPO_VIRTUAL ResponseMessageType GetResponseMessageType() const;
     ASAPO_VIRTUAL const std::string& GetResponseMessage() const;
     ASAPO_VIRTUAL Error CheckForDuplicates();
-    ASAPO_VIRTUAL SharedInstancedStatistics GetInstancedStatistics();
+    ASAPO_VIRTUAL RequestStatistics* GetStatistics();
     const AbstractLogger* log__;
  private:
     Error PrepareDataBufferFromMemory();
     Error PrepareDataBufferFromCache();
   private:
-    SharedInstancedStatistics statistics_;
+    RequestStatisticsPtr statistics_;
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     MessageData data_buffer_;

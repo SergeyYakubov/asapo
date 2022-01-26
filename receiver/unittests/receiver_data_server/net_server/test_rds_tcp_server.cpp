@@ -55,15 +55,11 @@ class RdsTCPServerTests : public Test {
     ListSocketDescriptors expected_client_sockets{2, 3, 4};
     std::vector<std::string> expected_new_connections = {"test1", "test2"};
 
-    std::shared_ptr<NiceMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
-
     std::shared_ptr<StrictMock<asapo::MockReceiverMonitoringClient>> mock_monitoring;
 
     std::unique_ptr<RdsTcpServer> tcp_server_ptr;
 
     void SetUp() override {
-        mock_instanced_statistics.reset(new NiceMock<asapo::MockInstancedStatistics>);
-
         mock_monitoring.reset(new StrictMock<asapo::MockReceiverMonitoringClient>);
         tcp_server_ptr.reset(new RdsTcpServer{expected_address, &mock_logger, mock_monitoring});
 
@@ -252,7 +248,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsReadOk) {
 
 TEST_F(RdsTCPServerTests, SendResponse) {
     asapo::GenericNetworkResponse tmp {};
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, nullptr};
 
     EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
     .WillOnce(
@@ -270,7 +266,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
     asapo::GenericNetworkResponse tmp {};
 
 
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, nullptr};
     asapo::CacheMeta expectedMeta {};
     expectedMeta.id = 20;
     expectedMeta.addr = (void*)0x9234;
@@ -290,7 +286,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
 TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
     asapo::GenericNetworkResponse tmp {};
 
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, nullptr};
     asapo::CacheMeta expectedMeta {};
     expectedMeta.id = 20;
     expectedMeta.addr = (void*)0x9234;
@@ -314,7 +310,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
 TEST_F(RdsTCPServerTests, SendResponseAndSlotData_Ok) {
     asapo::GenericNetworkResponse tmp {};
 
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, nullptr};
     asapo::CacheMeta expectedMeta {};
     expectedMeta.id = 20;
     expectedMeta.addr = (void*)0x9234;
