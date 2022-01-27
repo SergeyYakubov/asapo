@@ -1,3 +1,5 @@
+set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) #allow use package_ROOT variable to find package
+
 if (BUILD_PYTHON)
     set(BUILD_PYTHON_PACKAGES "" CACHE STRING "which python packages to build")
     set_property(CACHE BUILD_PYTHON_PACKAGES PROPERTY STRINGS source rpm deb win)
