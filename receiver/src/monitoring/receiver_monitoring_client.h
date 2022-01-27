@@ -17,7 +17,7 @@ public:
 
     ReceiverMonitoringClient(const ReceiverMonitoringClient&) = delete;
     ReceiverMonitoringClient& operator=(const ReceiverMonitoringClient&) = delete;
-
+    virtual void StartMonitoring() = 0;
     virtual void SendProducerToReceiverTransferDataPoint(const std::string& pipelineStepId,
                                                          const std::string& producerInstanceId,
                                                          const std::string& beamtime,

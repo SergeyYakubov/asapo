@@ -58,27 +58,23 @@ namespace {
 
     class MonitoringClientTest : public Test {
     public:
-        std::shared_ptr<StrictMock<asapo::MockDataCache>> mock_cache;
-        std::unique_ptr<StrictMock<asapo::MockReceiverMonitoringClientImpl_ToBeSendData>> mock_toBeSend;
+        std::shared_ptr<NiceMock<asapo::MockDataCache>> mock_cache;
+        NiceMock<asapo::MockReceiverMonitoringClientImpl_ToBeSendData>* mock_toBeSend;
         std::unique_ptr<asapo::ReceiverMonitoringClientImpl> monitoring;
         void SetUp() override {
-            mock_cache.reset(new StrictMock<asapo::MockDataCache>);
+            mock_cache.reset(new NiceMock<asapo::MockDataCache>);
             monitoring.reset(new asapo::ReceiverMonitoringClientImpl{mock_cache});
-            monitoring->sendingThreadRunning__ = true;
-            mock_toBeSend.reset(new StrictMock<asapo::MockReceiverMonitoringClientImpl_ToBeSendData>);
-            monitoring->toBeSendData__.reset(mock_toBeSend.get());
+            mock_toBeSend = new NiceMock<asapo::MockReceiverMonitoringClientImpl_ToBeSendData>;
+            monitoring->toBeSendData__.reset(mock_toBeSend);
         }
         void TearDown() override {
-            monitoring->toBeSendData__.release(); // NOLINT(bugprone-unused-return-value) because it is a local part of this->mock_toBeSend
         }
     };
 
     TEST_F(MonitoringClientTest, DefaultGenerator) {
         std::shared_ptr<StrictMock<asapo::MockDataCache>> mock_cache;
         asapo::SharedReceiverMonitoringClient monitoring_l = asapo::GenerateDefaultReceiverMonitoringClient(mock_cache, false);
-
         asapo::ReceiverMonitoringClientImpl* monitoring_l_impl = dynamic_cast<asapo::ReceiverMonitoringClientImpl*>(monitoring_l.get());
-
         EXPECT_THAT(monitoring_l_impl, Ne(nullptr));
         EXPECT_THAT(monitoring_l_impl->log__, Ne(nullptr));
         EXPECT_THAT(monitoring_l_impl->io__, Ne(nullptr));
@@ -114,6 +110,7 @@ namespace {
                 "p1", "i1", "b1", "so1", "st1"
                 )).WillOnce(Return(x));
 
+        monitoring->sendingThreadRunning__ = true; // to trick client and initiata data transfer
         monitoring->SendProducerToReceiverTransferDataPoint("p1", "i1", "b1", "so1", "st1", 1, 2, 3, 4);
 
         EXPECT_THAT(x->totalfilesize(), Eq(101));
@@ -132,6 +129,7 @@ namespace {
                 "p1", "i1", "b1", "so1", "st1"
                 )).WillOnce(Return(x));
 
+        monitoring->sendingThreadRunning__ = true; // to trick client and initiata data transfer
         monitoring->SendRdsRequestWasMissDataPoint("p1", "i1", "b1", "so1", "st1");
 
         EXPECT_THAT(x->totalfilesize(), Eq(100));
@@ -150,6 +148,7 @@ namespace {
                 "p1", "i1", "b1", "so1", "st1"
                 )).WillOnce(Return(x));
 
+        monitoring->sendingThreadRunning__ = true; // to trick client and initiata data transfer
         monitoring->SendReceiverRequestDataPoint("p1", "i1", "b1", "so1", "st1", 2, 3);
 
         EXPECT_THAT(x->totalfilesize(), Eq(102));

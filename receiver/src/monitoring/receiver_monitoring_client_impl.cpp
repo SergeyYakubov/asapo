@@ -26,8 +26,14 @@ asapo::ReceiverMonitoringClientImpl::ReceiverMonitoringClientImpl(asapo::SharedC
     }
     receiverName_ = "receiver_" +  hostname + "_" + std::to_string(io__->GetCurrentPid());
 
-    ReinitializeClient();
+
 }
+
+void ReceiverMonitoringClientImpl::StartMonitoring() {
+    ReinitializeClient();
+    StartSendingThread();
+}
+
 
 void asapo::ReceiverMonitoringClientImpl::StartSendingThread() {
     if (sendingThreadRunning__) {
@@ -47,10 +53,16 @@ void asapo::ReceiverMonitoringClientImpl::StartSendingThread() {
 }
 
 void asapo::ReceiverMonitoringClientImpl::StopSendingThread() {
+    if (!sendingThreadRunning__) {
+        log__->Info("sending thread already stopped");
+        return;
+    }
+
     log__->Info("Stopping sending thread");
     sendingThreadRunning__ = false;
     if (sendingThread_.get() && sendingThread_->joinable()) {
         sendingThread_->join();
+        sendingThread_=nullptr;
     }
     log__->Info("Stopped sending thread");
 }
@@ -228,9 +240,6 @@ asapo::Error asapo::ReceiverMonitoringClientImpl::ReinitializeClient() {
         newClient.reset(); // delete client first
         newChannel.reset();
     }
-
-    StartSendingThread();
-
     return nullptr;
 }
 
@@ -344,5 +353,10 @@ uint64_t asapo::ReceiverMonitoringClientImpl::WaitTimeMsUntilNextInterval(std::c
     auto result = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>(interval - (delta % interval)).count();
     return result;
 }
+
+ReceiverMonitoringClientImpl::~ReceiverMonitoringClientImpl() {
+    StopSendingThread();
+}
+
 
 

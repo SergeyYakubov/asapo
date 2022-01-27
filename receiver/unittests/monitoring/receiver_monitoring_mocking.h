@@ -10,6 +10,7 @@ namespace asapo {
 
 class MockReceiverMonitoringClient : public asapo::ReceiverMonitoringClient {
 public:
+    void StartMonitoring() override {};
     MOCK_METHOD9(SendProducerToReceiverTransferDataPoint, void(const std::string& pipelineStepId, const std::string& producerInstanceId,
             const std::string& beamtime, const std::string& source,
             const std::string& stream, uint64_t fileSize,

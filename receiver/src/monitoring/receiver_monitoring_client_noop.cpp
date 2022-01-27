@@ -52,3 +52,7 @@ void asapo::ReceiverMonitoringClientNoop::SendReceiverRequestDataPoint(const std
 void asapo::ReceiverMonitoringClientNoop::FillMemoryStats() {
 
 }
+
+void asapo::ReceiverMonitoringClientNoop::StartMonitoring() {
+
+}

@@ -6,6 +6,7 @@
 namespace asapo {
     class ReceiverMonitoringClientNoop : public ReceiverMonitoringClient {
     public:
+        void StartMonitoring() override;
         void SendProducerToReceiverTransferDataPoint(const std::string& pipelineStepId,
                                                      const std::string& producerInstanceId, const std::string& beamtime,
                                                      const std::string& source, const std::string& stream,

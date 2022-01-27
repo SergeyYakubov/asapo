@@ -645,13 +645,11 @@ Error SystemIO::RemoveFile(const std::string& fname) const {
 
 std::string SystemIO::GetHostName(Error* err) const noexcept {
     char host[1024];
-    gethostname(host, sizeof(host));
-    *err = GetLastError();
-    if (*err) {
+    if (gethostname(host, sizeof(host))!=0) {
+        *err = GetLastError();
         return "";
-    } else {
-        return host;
     }
+    return host;
 }
 
 Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const {

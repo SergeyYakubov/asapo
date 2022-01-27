@@ -43,10 +43,10 @@ public:
     explicit ReceiverMonitoringClientImpl(SharedCache cache);
     ReceiverMonitoringClientImpl(const ReceiverMonitoringClientImpl&) = delete;
     ReceiverMonitoringClientImpl& operator=(const ReceiverMonitoringClientImpl&) = delete;
-
+    ~ReceiverMonitoringClientImpl();
     void StartSendingThread();
     void StopSendingThread();
-
+    void StartMonitoring() override;
     void SendProducerToReceiverTransferDataPoint(const std::string& pipelineStepId,
                                                          const std::string& producerInstanceId,
                                                          const std::string& beamtime,
@@ -85,7 +85,7 @@ public:
         //std::mutex mutex;
         ReceiverDataPointContainer container;
         ASAPO_VIRTUAL ~ToBeSendData()=default;
-        ASAPO_VIRTUAL ProducerToReceiverTransferDataPoint* GetProducerToReceiverTransfer(
+      ASAPO_VIRTUAL ProducerToReceiverTransferDataPoint* GetProducerToReceiverTransfer(
                 const std::string& pipelineStepId,
                 const std::string& producerInstanceId,
                 const std::string& beamtime,
