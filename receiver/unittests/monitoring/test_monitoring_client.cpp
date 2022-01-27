@@ -101,14 +101,14 @@ namespace {
     }
 
     TEST_F(MonitoringClientTest, GetProducerToReceiverTransfer_SendProducerToReceiverTransferDataPoint) {
-        auto x = new ProducerToReceiverTransferDataPoint;
+        std::unique_ptr<ProducerToReceiverTransferDataPoint> x{ new ProducerToReceiverTransferDataPoint};
         x->set_totalfilesize(100);
         x->set_totaltransferreceivetimeinmicroseconds(200);
         x->set_totalwriteiotimeinmicroseconds(300);
         x->set_totaldbtimeinmicroseconds(400);
         EXPECT_CALL(*mock_toBeSend, GetProducerToReceiverTransfer(
                 "p1", "i1", "b1", "so1", "st1"
-                )).WillOnce(Return(x));
+                )).WillOnce(Return(x.get()));
 
         monitoring->sendingThreadRunning__ = true; // to trick client and initiata data transfer
         monitoring->SendProducerToReceiverTransferDataPoint("p1", "i1", "b1", "so1", "st1", 1, 2, 3, 4);
@@ -120,14 +120,14 @@ namespace {
     }
 
     TEST_F(MonitoringClientTest, GetProducerToReceiverTransfer_SendRdsRequestWasMissDataPoint) {
-        auto x = new RdsToConsumerDataPoint;
+        std::unique_ptr<RdsToConsumerDataPoint> x {new RdsToConsumerDataPoint};
         x->set_totalfilesize(100);
         x->set_hits(200);
         x->set_misses(300);
         x->set_totaltransfersendtimeinmicroseconds(400);
         EXPECT_CALL(*mock_toBeSend, GetReceiverDataServerToConsumer(
                 "p1", "i1", "b1", "so1", "st1"
-                )).WillOnce(Return(x));
+                )).WillOnce(Return(x.get()));
 
         monitoring->sendingThreadRunning__ = true; // to trick client and initiata data transfer
         monitoring->SendRdsRequestWasMissDataPoint("p1", "i1", "b1", "so1", "st1");
@@ -139,14 +139,14 @@ namespace {
     }
 
     TEST_F(MonitoringClientTest, GetProducerToReceiverTransfer_SendReceiverRequestDataPoint) {
-        auto x = new RdsToConsumerDataPoint;
+        std::unique_ptr<RdsToConsumerDataPoint> x{new RdsToConsumerDataPoint};
         x->set_totalfilesize(100);
         x->set_hits(200);
         x->set_misses(300);
         x->set_totaltransfersendtimeinmicroseconds(400);
         EXPECT_CALL(*mock_toBeSend, GetReceiverDataServerToConsumer(
                 "p1", "i1", "b1", "so1", "st1"
-                )).WillOnce(Return(x));
+                )).WillOnce(Return(x.get()));
 
         monitoring->sendingThreadRunning__ = true; // to trick client and initiata data transfer
         monitoring->SendReceiverRequestDataPoint("p1", "i1", "b1", "so1", "st1", 2, 3);

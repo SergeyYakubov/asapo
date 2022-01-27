@@ -33,7 +33,7 @@ public:
 
     SharedCache cache_;
 public:
-    IO* io__;
+    std::unique_ptr<IO> io__;
     AbstractLogger* log__;
     std::unique_ptr<HttpClient> http_client__;
 
