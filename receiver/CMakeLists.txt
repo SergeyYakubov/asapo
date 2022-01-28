@@ -213,6 +213,8 @@ gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}"
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/*.h
+        ${CMAKE_CURRENT_BINARY_DIR}/*.h
+        ${CMAKE_CURRENT_BINARY_DIR}/*.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/net_server/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/net_server/*.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/request_handler/*.cpp
