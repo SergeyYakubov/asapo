@@ -49,7 +49,7 @@ func (g *gRPCBrokerMonitoringDataSender) Send(container *pb.BrokerDataPointConta
 
 func (m *brokerMonitoring) reinitializeSender() error {
 	if settings.MonitoringServerUrl == "auto" {
-		fetchedMonitoringServerUrl, err := discoveryService.GetMongoDbAddress()
+		fetchedMonitoringServerUrl, err := discoveryService.GetMonitoringServerUrl()
 		if err != nil {
 			return err
 		}

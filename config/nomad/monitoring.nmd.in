@@ -1,0 +1,48 @@
+job "monitoring" {
+  datacenters = ["dc1"]
+
+  type = "service"
+
+  group "monitoring" {
+    count = 1
+
+    task "monitoring-server" {
+      driver = "raw_exec"
+
+      config {
+        command = "@MONITORING_SERVER_FULLPATH@"
+        args =  ["-config","${NOMAD_TASK_DIR}/monitoring_server.json"]
+      }
+
+      resources {
+        cpu    = 500 # 500 MHz
+        memory = 256 # 256MB
+        network {
+          port "monitoring_server" {
+            static = "5009"
+          }
+        }
+      }
+
+      service {
+        name = "asapo-monitoring"
+        port = "monitoring_server"
+        check {
+          name     = "alive"
+          port     = "monitoring_server"
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+      }
+
+      template {
+         source        = "@WORK_DIR@/monitoring_server.json.tpl"
+         destination   = "local/monitoring_server.json"
+         change_mode   = "signal"
+         change_signal = "SIGHUP"
+      }
+    }
+  }
+}

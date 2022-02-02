@@ -11,6 +11,7 @@ type serverSettings struct {
 	LogLevel                string
 
 	DiscoveryServer         string
+	MonitorPerformance      bool
 	MonitoringServerUrl     string
 
 	SecretFile              string
