@@ -6,8 +6,6 @@ ELSE()
     set (exe_name "${TARGET_NAME}")
 ENDIF()
 
-configure_file(docker/Dockerfile docker/Dockerfile COPYONLY)
-
 add_custom_target(${TARGET_NAME} ALL
     COMMAND go build ${GO_OPTS} -o ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} main/main.go
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_monitoring_server
