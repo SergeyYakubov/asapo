@@ -6,13 +6,6 @@ job "asapo-perfmetrics" {
     weight    = 100
   }
 
-#  update {
-#    max_parallel = 1
-#    min_healthy_time = "10s"
-#    healthy_deadline = "3m"
-#    auto_revert = false
-#  }
-
   group "perfmetrics" {
     count = "%{ if perf_monitor }1%{ else }0%{ endif }"
     restart {
@@ -69,6 +62,7 @@ job "asapo-perfmetrics" {
      }
 
    } #influxdb
+
 
 
     task "grafana" {
