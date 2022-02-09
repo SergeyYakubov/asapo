@@ -23,13 +23,14 @@ job "asapo-perfmetrics" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "influxdb:${influxdb_version}"
-        volumes = ["/${service_dir}/influxdb2:/var/lib/influxdb2"]
+        volumes = ["/${service_dir}/influxdb:/var/lib/influxdb"]
       }
 
       env {
         PRE_CREATE_DB="asapo_receivers;asapo_brokers"
         INFLUXDB_BIND_ADDRESS="127.0.0.1:$${NOMAD_PORT_influxdb_rpc}"
         INFLUXDB_HTTP_BIND_ADDRESS=":$${NOMAD_PORT_influxdb}"
+        INFLUXDB_HTTP_FLUX_ENABLED="true"
       }
 
       resources {
@@ -109,6 +110,61 @@ job "asapo-perfmetrics" {
      }
 
    } #grafana
+
+    task "monitoring-server" {
+      driver = "docker"
+      user = "${asapo_user}"
+
+      config {
+        ulimit {
+          memlock = "-1:-1"
+        }
+        network_mode = "host"
+        security_opt = ["no-new-privileges"]
+        userns_mode = "host"
+        privileged = true
+        image = "${docker_repository}/asapo-monitoring-server${image_suffix}"
+        force_pull = ${force_pull_images}
+        volumes = ["local/config.json:/var/lib/monitoring_server/config.json"]
+        %{ if ! nomad_logs  }
+        logging {
+          type = "fluentd"
+          config {
+            fluentd-address = "localhost:9881"
+            fluentd-async-connect = true
+            tag = "asapo.docker"
+          }
+        }
+        %{endif}
+      }
+
+      resources {
+        memory = "${monitoring_server_total_memory_size}"
+        network {
+          port "monitoring_server" {}
+        }
+      }
+
+      service {
+        name = "asapo-monitoring"
+        port = "monitoring_server"
+        check {
+          name     = "alive"
+          port     = "monitoring_server"
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+      }
+
+      template {
+        source        = "${scripts_dir}/monitoring_server.json.tpl"
+        destination   = "local/config.json"
+        change_mode   = "restart"
+      }
+    } # monitoring server
+
 
 
   }

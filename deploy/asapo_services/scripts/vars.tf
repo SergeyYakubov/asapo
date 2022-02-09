@@ -1,3 +1,5 @@
+variable "asapo_docker_repository" {}
+
 variable "elk_logs" {}
 
 variable "perf_monitor" {}
@@ -82,6 +84,7 @@ variable "prometheus_total_memory_size" {}
 
 variable "alertmanager_total_memory_size" {}
 
+variable "monitoring_server_total_memory_size" {}
 
 variable "grafana_port" {}
 

@@ -96,6 +96,8 @@ data "template_file" "asapo_perfmetrics" {
   template = "${file("${var.job_scripts_dir}/asapo-perfmetrics.nmd.tpl")}"
   vars = {
     service_dir = "${var.service_dir}"
+    image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
+    docker_repository = "${var.asapo_docker_repository}"
     influxdb_version = "${var.influxdb_version}"
     grafana_version = "${var.grafana_version}"
     grafana_total_memory_size = "${var.grafana_total_memory_size}"
@@ -105,7 +107,11 @@ data "template_file" "asapo_perfmetrics" {
     asapo_user = "${var.asapo_user}"
     influxdb_rpc_port = "${var.influxdb_rpc_port}"
     perf_monitor = "${var.perf_monitor}"
-    }
+    monitoring_server_total_memory_size = "${var.monitoring_server_total_memory_size}"
+    force_pull_images = "${var.force_pull_images}"
+    nomad_logs = "${var.nomad_logs}"
+    scripts_dir = "${var.job_scripts_dir}"
+  }
 }
 
 
