@@ -17,6 +17,7 @@ data "template_file" "nginx" {
     prometheus_port = "${var.prometheus_port}"
     alertmanager_port = "${var.alertmanager_port}"
     monitoring_ui_port = "${var.monitoring_ui_port}"
+    monitoring_proxy_port = "${var.monitoring_proxy_port}"
   }
 }
 

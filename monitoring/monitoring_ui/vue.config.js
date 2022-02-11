@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
+    publicPath: '/tv/', // change it in src/router/index.js as well, I could not find how to do that automatically
     configureWebpack: {
         resolve: {
             alias: {
@@ -18,11 +19,11 @@ module.exports = {
     },
     devServer: {
         proxy: {
-            "^/api": {
+            "^/tv-api": {
               target: "http://127.0.0.1:5020",
               changeOrigin: true,
               logLevel: "debug",
-              pathRewrite: { "^/api": "/" }
+              pathRewrite: { "^/tv-api": "/" }
             }
         }
     }

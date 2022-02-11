@@ -1,6 +1,8 @@
 elk_logs = false
 perf_monitor = true
 
+force_pull_images = true
+
 asapo_docker_repository = "yakser"
 #asapo_imagename_suffix = ""
 #asapo_image_tag = ""

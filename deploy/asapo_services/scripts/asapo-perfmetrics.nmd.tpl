@@ -178,7 +178,7 @@ job "asapo-perfmetrics" {
         image = "envoyproxy/envoy:v1.21.0"
         volumes = ["local/envoy.yaml:/etc/envoy/envoy.yaml"]
         command = "/usr/local/bin/envoy"
-        args=["-c","/etc/envoy/envoy.yaml","-l","trace"]
+        args=["-c","/etc/envoy/envoy.yaml"] #,"-l","trace"
       }
 
       resources {

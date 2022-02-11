@@ -38,6 +38,7 @@ job "asapo-nginx" {
         prometheus_port = "${prometheus_port}"
         alertmanager_port = "${alertmanager_port}"
         monitoring_ui_port = "${monitoring_ui_port}"
+        monitoring_proxy_port = "${monitoring_proxy_port}"
       }
 
       config {

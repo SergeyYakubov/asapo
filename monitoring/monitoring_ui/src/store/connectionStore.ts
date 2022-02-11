@@ -62,7 +62,7 @@ import { toplogyStore } from './toplogyStore';
 import { metricData } from './metricDataStore';
 
 console.log('AsapoMonitoringQueryServicePromiseClient');
-const client = new AsapoMonitoringQueryServiceClient('/api', null);
+const client = new AsapoMonitoringQueryServiceClient('/tv-api', null);
 
 class ConnectionStore {
     private pendingDataRefreshTimeoutHandle?: number;
