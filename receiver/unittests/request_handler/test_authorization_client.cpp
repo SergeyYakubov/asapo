@@ -43,6 +43,9 @@ class AuthorizerClientTests : public Test {
     std::string expected_beamline = "beamline";
     std::string expected_beamline_path = "/beamline/p01/current";
     std::string expected_core_path = "/gpfs/blabla";
+    std::string expected_pipeline_step_id = "pipeline_step_id";
+    std::string expected_producer_instance_id = "producer_instance_id";
+
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string;
@@ -134,6 +137,9 @@ TEST_F(AuthorizerClientTests, AuthorizeOk) {
     ASSERT_THAT(expected_auth_data.online_path, Eq(expected_beamline_path));
     ASSERT_THAT(expected_auth_data.last_update, Gt(std::chrono::system_clock::time_point{}));
     ASSERT_THAT(expected_auth_data.source_credentials, Eq(expected_source_credentials));
+    ASSERT_THAT(expected_auth_data.pipeline_step_id, Eq(expected_pipeline_step_id));
+    ASSERT_THAT(expected_auth_data.producer_instance_id, Eq(expected_producer_instance_id));
+
 
 }
 

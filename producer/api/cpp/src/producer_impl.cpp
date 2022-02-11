@@ -32,7 +32,6 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
     }
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 
-    source_cred_string_using_new_format_ = false;
 }
 
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
@@ -191,7 +190,7 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
 
     err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-                source_cred_string_using_new_format_, source_cred_string_,
+                source_cred_string_,
                 std::move(request_header), std::move(data), std::move(message_header.user_metadata),
                 std::move(full_path), callback,
                 manage_data_memory, timeout_ms_}
@@ -266,15 +265,6 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     return err;
 }
 
-Error ProducerImpl::EnableNewMonitoringApiFormat(bool enabled) {
-    source_cred_string_using_new_format_ = enabled;
-    Error err;
-    if (last_creds_) {
-        err = RefreshSourceCredentialString(*last_creds_);
-    }
-    return err;
-}
-
 Error ProducerImpl::RefreshSourceCredentialString(SourceCredentials source_cred) {
     if (source_cred.instance_id.empty()) {
         source_cred.instance_id = SourceCredentials::kDefaultInstanceId;
@@ -318,13 +308,7 @@ Error ProducerImpl::RefreshSourceCredentialString(SourceCredentials source_cred)
         source_cred.pipeline_step = "DefaultStep";
     }
 
-    source_cred_string_ = source_cred.GetString(source_cred_string_using_new_format_ ? SourceCredentialsVersion::NewVersion : SourceCredentialsVersion::OldVersion);
-
-    if (source_cred_string_.size() + source_cred.user_token.size() > kMaxMessageSize) {
-        log__->Error("credentials string is too long - " + source_cred_string_);
-        source_cred_string_ = "";
-        return ProducerErrorTemplates::kWrongInput.Generate("credentials string is too long");
-    }
+    source_cred_string_ = source_cred.GetString();
 
     return nullptr;
 }
@@ -441,7 +425,6 @@ std::string ProducerImpl::BlockingRequest(GenericRequestHeader header, uint64_t 
 
     *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-                source_cred_string_using_new_format_,
                 source_cred_string_, std::move(header),
                 nullptr, "", "",
                 unwrap_callback(
@@ -572,7 +555,6 @@ Error ProducerImpl::SendMeta(const std::string& metadata,
     strncpy((char*) data.get(), metadata.c_str(), metadata.size());
     auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-            source_cred_string_using_new_format_,
             source_cred_string_, std::move(request_header),
             std::move(data), "", "", callback, true, timeout_ms_}
     });

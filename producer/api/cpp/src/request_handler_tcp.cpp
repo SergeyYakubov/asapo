@@ -15,12 +15,8 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
     ncurrent_connections_{shared_counter} {
 }
 
-Error RequestHandlerTcp::Authorize(bool new_format, const std::string& source_credentials) {
+Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
     GenericRequestHeader header{kOpcodeAuthorize, 0, 0, source_credentials.size(), ""};
-    if (new_format) {
-        strcpy(header.message, "new_source_credentials_format");
-    }
-
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
     if (err) {
@@ -35,7 +31,7 @@ Error RequestHandlerTcp::Authorize(bool new_format, const std::string& source_cr
     return ReceiveResponse(nullptr);
 }
 
-Error RequestHandlerTcp::ConnectToReceiver(bool new_format, const std::string& source_credentials, const std::string& receiver_address) {
+Error RequestHandlerTcp::ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address) {
     Error err;
 
     sd_ = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
@@ -46,7 +42,7 @@ Error RequestHandlerTcp::ConnectToReceiver(bool new_format, const std::string& s
     log__->Debug("connected to receiver at " + receiver_address);
 
     connected_receiver_uri_ = receiver_address;
-    err = Authorize(new_format, source_credentials);
+    err = Authorize(source_credentials);
     if (err != nullptr) {
         log__->Error("authorization failed at " + receiver_address + " - " + err->Explain());
         Disconnect();
@@ -243,7 +239,7 @@ bool ImmediateCallbackAfterError(const Error& err) {
 bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
     for (const auto& receiver_uri : receivers_list_) {
         if (Disconnected()) {
-            auto err = ConnectToReceiver(request->using_new_source_credentials_format, request->source_credentials, receiver_uri);
+            auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
             if (ImmediateCallbackAfterError(err)) {
                 ProcessRequestCallback(std::move(err), request, "", retry);
                 return false;

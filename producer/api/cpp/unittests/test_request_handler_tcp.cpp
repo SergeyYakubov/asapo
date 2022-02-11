@@ -83,7 +83,7 @@ class RequestHandlerTcpTests : public testing::Test {
                                         ()};
   asapo::MessageData callback_data;
 
-  asapo::ProducerRequest request{false, expected_beamtime_id, header, std::move(expected_data1), expected_metadata, "",
+  asapo::ProducerRequest request{expected_beamtime_id, header, std::move(expected_data1), expected_metadata, "",
                                  [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
                                    callback_called = true;
                                    callback_err = std::move(err);
@@ -93,7 +93,7 @@ class RequestHandlerTcpTests : public testing::Test {
                                  }, true, 0};
 
   std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
-  asapo::ProducerRequest request_filesend{false, expected_beamtime_id, header_fromfile, nullptr, expected_metadata,
+  asapo::ProducerRequest request_filesend{expected_beamtime_id, header_fromfile, nullptr, expected_metadata,
                                           expected_origin_fullpath,
                                           [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
                                             callback_called = true;
@@ -104,7 +104,7 @@ class RequestHandlerTcpTests : public testing::Test {
                                           }, true, 0};
 
   asapo::ProducerRequest
-      request_nocallback{false, expected_beamtime_id, header, nullptr, expected_metadata, "", nullptr, true, 0};
+      request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata, "", nullptr, true, 0};
   testing::NiceMock<asapo::MockLogger> mock_logger;
   uint64_t n_connections{0};
   asapo::RequestHandlerTcp request_handler{&mock_discovery_service, expected_thread_id, &n_connections};
@@ -121,8 +121,8 @@ class RequestHandlerTcpTests : public testing::Test {
   bool retry;
   Sequence seq_receive[2];
   void ExpectFailConnect(bool only_once = false);
-  void ExpectFailAuthorize(asapo::NetworkErrorCode error_code, bool useNewCredsFormat = false);
-  void ExpectOKAuthorize(bool only_once = false, bool useNewCredsFormat = false);
+  void ExpectFailAuthorize(asapo::NetworkErrorCode error_code);
+  void ExpectOKAuthorize(bool only_once = false);
   void ExpectFailSendHeader(bool only_once = false);
   void ExpectFailSend(uint64_t expected_size, bool only_once);
   void ExpectFailSend(bool only_once = false);
@@ -192,15 +192,14 @@ void RequestHandlerTcpTests::ExpectFailConnect(bool only_once) {
 
 }
 
-void RequestHandlerTcpTests::ExpectFailAuthorize(asapo::NetworkErrorCode error_code,
-                                                 bool useNewCredsFormat /*= false*/) {
+void RequestHandlerTcpTests::ExpectFailAuthorize(asapo::NetworkErrorCode error_code) {
     auto expected_sd = expected_sds[0];
     EXPECT_CALL(mock_io,
                 Send_t(expected_sd,
                        M_CheckSendRequest(asapo::kOpcodeAuthorize,
                                           0,
                                           0,
-                                          useNewCredsFormat ? "new_source_credentials_format" : "",
+                                          "",
                                           ""),
                        sizeof(asapo::GenericRequestHeader),
                        _))
@@ -240,7 +239,7 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(asapo::NetworkErrorCode error_c
     ));
 }
 
-void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once, bool useNewCredsFormat /*= false*/) {
+void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
     size_t i = 0;
     for (auto expected_sd: expected_sds) {
         EXPECT_CALL(mock_io,
@@ -248,7 +247,7 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once, bool useNewCredsF
                            M_CheckSendRequest(asapo::kOpcodeAuthorize,
                                               0,
                                               0,
-                                              useNewCredsFormat ? "new_source_credentials_format" : "",
+                                              "",
                                               ""),
                            sizeof(asapo::GenericRequestHeader),
                            _))
@@ -899,32 +898,6 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKReceive(true, asapo::kNetErrorNoError, expected_response);
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
-
-    ASSERT_THAT(success, Eq(true));
-    ASSERT_THAT(retry, Eq(false));
-    ASSERT_THAT(callback_err, Eq(nullptr));
-    ASSERT_THAT(callback_called, Eq(true));
-    ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
-    ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
-    ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
-    ASSERT_THAT(callback_data, Ne(nullptr));
-    for (uint64_t i = 0; i < expected_file_size; i++) {
-        ASSERT_THAT(callback_data[i], Eq(expected_callback_data));
-    }
-
-    ASSERT_THAT(callback_response, Eq(expected_response));
-    ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
-}
-
-TEST_F(RequestHandlerTcpTests, SendOK_NewFormat) {
-    ExpectOKConnect(true);
-    ExpectOKAuthorize(true, true);
-    ExpectOKSendAll(true);
-    ExpectOKReceive(true, asapo::kNetErrorNoError, expected_response);
-
-    request_handler.PrepareProcessingRequestLocked();
-    request.using_new_source_credentials_format = true;
     auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));

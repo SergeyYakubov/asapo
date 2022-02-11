@@ -37,7 +37,6 @@ func (s *IngestServer) InsertReceiverDataPoints(ctx context.Context, data *pb.Re
 				"receiverName":       data.ReceiverName,
 				"pipelineStepId":     dataPoint.PipelineStepId,
 				"producerInstanceId": dataPoint.ProducerInstanceId,
-
 				"beamtime": dataPoint.Beamtime,
 				"source":   dataPoint.Source,
 				"stream":   dataPoint.Stream,

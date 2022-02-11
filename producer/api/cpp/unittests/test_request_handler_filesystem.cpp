@@ -59,15 +59,15 @@ class RequestHandlerFilesystemTests : public testing::Test {
     asapo::GenericRequestHeader callback_header;
     std::string callback_response;
 
-    asapo::ProducerRequest request{false, "", header, nullptr, "", "", [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
+    asapo::ProducerRequest request{"", header, nullptr, "", "", [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
             called = true;
             callback_err = std::move(err);
             callback_header = payload.original_header;
             callback_response = payload.response;
         }, true, 0};
 
-    asapo::ProducerRequest request_nocallback{false, "", header, nullptr, "", "", nullptr, true, 0};
-    asapo::ProducerRequest request_filesend{false, "", header, nullptr, "", expected_origin_fullpath, nullptr, true, 0};
+    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr, true, 0};
+    asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr, true, 0};
 
     testing::NiceMock<asapo::MockLogger> mock_logger;
 

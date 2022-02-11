@@ -89,8 +89,7 @@ class ProducerImplTests : public testing::Test {
     asapo::SourceCredentials expected_credentials{asapo::SourceType::kRaw, "instance", "step", "beamtime_id", "beamline", "subname", "token"};
     asapo::SourceCredentials expected_default_credentials{asapo::SourceType::kProcessed, "instance", "step", "beamtime_id", "", "", "token"};
 
-    std::string expected_credentials_str_new = "raw%instance%step%beamtime_id%beamline%subname%token";
-    std::string expected_credentials_str_old = "raw%beamtime_id%beamline%subname%token";
+    std::string expected_credentials_str = "raw%instance%step%beamtime_id%beamline%subname%token";
     std::string expected_default_credentials_str = "processed%instance%step%beamtime_id%auto%detector%token";
 
     std::string expected_metadata = "meta";
@@ -214,11 +213,11 @@ TEST_F(ProducerImplTests, OkIfZeroSizeWithTransferMetadataOnlyMode) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ProducerImplTests, OldFormat_OKSendingSendRequestWithStream) {
+TEST_F(ProducerImplTests, OKSendingSendRequestWithStream) {
     producer.SetCredentials(expected_credentials);
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
-                                                           expected_credentials_str_old,
+                                                           expected_credentials_str,
                                                            expected_metadata,
                                                            expected_id,
                                                            expected_size,
@@ -236,36 +235,11 @@ TEST_F(ProducerImplTests, OldFormat_OKSendingSendRequestWithStream) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ProducerImplTests, NewFormat_OKSendingSendRequestWithStream) {
-    producer.EnableNewMonitoringApiFormat(false);
-    producer.SetCredentials(expected_credentials);
-    producer.EnableNewMonitoringApiFormat(true);
-
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
-                                                           expected_credentials_str_new,
-                                                           expected_metadata,
-                                                           expected_id,
-                                                           expected_size,
-                                                           expected_name,
-                                                           expected_stream,
-                                                           expected_ingest_mode,
-                                                           0,
-                                                           0
-                                                           ), false)).WillOnce(Return(
-                                                                   nullptr));
-
-    asapo::MessageHeader message_header{expected_id, expected_size, expected_name, expected_metadata};
-    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, expected_stream, nullptr);
-
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-TEST_F(ProducerImplTests, NewFormat_OKSendingSendRequestWithStream_PreSet) {
-    producer.EnableNewMonitoringApiFormat(true);
+TEST_F(ProducerImplTests, OKSendingSendRequestWithStream_PreSet) {
     producer.SetCredentials(expected_credentials);
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
-                                                           expected_credentials_str_new,
+                                                           expected_credentials_str,
                                                            expected_metadata,
                                                            expected_id,
                                                            expected_size,
@@ -289,7 +263,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinish) {
     std::string next_stream_meta = std::string("{\"next_stream\":") + "\"" + expected_next_stream + "\"}";
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         next_stream_meta.c_str(),
                                         expected_id + 1,
                                         0,
@@ -321,7 +295,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
                        + "\"}";
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         next_stream_meta.c_str(),
                                         expected_id + 1,
                                         0,
@@ -341,7 +315,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
 TEST_F(ProducerImplTests, OKSendingSendDatasetDataRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferDatasetData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         expected_metadata,
                                         expected_id,
                                         expected_size,
@@ -368,7 +342,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequestOld) {
 
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         "",
                                         expected_id,
                                         expected_size,
@@ -391,7 +365,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
 
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         "",
                                         expected_id,
                                         expected_size,
@@ -416,7 +390,7 @@ TEST_F(ProducerImplTests, OKAddingSendStreamDataRequest) {
     std::string expected_message = (std::string(expected_stream) + ".meta");
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         "",
                                         expected_id,
                                         expected_size,
@@ -475,7 +449,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithStream) {
     producer.SetCredentials(expected_credentials);
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         "",
                                         expected_id,
                                         0,
@@ -491,16 +465,6 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithStream) {
         producer.SendFile(message_header, expected_fullpath, expected_ingest_mode, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
-}
-
-TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
-    std::string long_str(asapo::kMaxMessageSize * 10, 'a');
-    expected_credentials = asapo::SourceCredentials{asapo::SourceType::kRaw, "", "", long_str, "", "", ""};
-    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
-
-    auto err = producer.SetCredentials(expected_credentials);
-
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
@@ -578,7 +542,7 @@ MATCHER_P3(M_CheckGetRequest, op_code, source_credentials, stream,
 TEST_F(ProducerImplTests, GetStreamInfoMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeStreamInfo,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         expected_stream), true)).WillOnce(
                                             Return(nullptr));
 
@@ -606,7 +570,7 @@ TEST(GetStreamInfoTest, GetStreamInfoTimeout) {
 TEST_F(ProducerImplTests, GetLastStreamMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeLastStream,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         ""), true)).WillOnce(
                                             Return(nullptr));
 
@@ -623,7 +587,7 @@ TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
     data[40] = 10;
     asapo::OriginalRequest* original_request = new asapo::OriginalRequest{};
 
-    auto request = std::unique_ptr<ProducerRequest> {new ProducerRequest{false, "", asapo::GenericRequestHeader{}, std::move(data), "", "", nullptr, true, 0}};
+    auto request = std::unique_ptr<ProducerRequest> {new ProducerRequest{"", asapo::GenericRequestHeader{}, std::move(data), "", "", nullptr, true, 0}};
     original_request->request = std::move(request);
     auto pool_err = asapo::IOErrorTemplates::kNoSpaceLeft.Generate();
     pool_err->SetCustomData(std::unique_ptr<asapo::CustomErrorData> {original_request});
@@ -651,7 +615,7 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
         R"({"softwareVersion":"21.06.0, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.4"}})";
 
     EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri +
-                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.5"), _, _)).WillOnce(DoAll(
+                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.6"), _, _)).WillOnce(DoAll(
                                                            SetArgPointee<1>(asapo::HttpCode::OK),
                                                            SetArgPointee<2>(nullptr),
                                                            Return(result)));
@@ -680,7 +644,7 @@ TEST_F(ProducerImplTests, DeleteStreamMakesCorrectRequest) {
     auto flag = 3;
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckDeleteStreamRequest(asapo::kOpcodeDeleteStream,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         expected_stream, flag), true)).WillOnce(
                                             Return(nullptr));
 
@@ -692,7 +656,7 @@ TEST_F(ProducerImplTests, DeleteStreamMakesCorrectRequest) {
 TEST_F(ProducerImplTests, GetStreamMetaMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeGetMeta,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         expected_stream), true)).WillOnce(
                                             Return(nullptr));
 
@@ -705,7 +669,7 @@ TEST_F(ProducerImplTests, GetStreamMetaMakesCorrectRequest) {
 TEST_F(ProducerImplTests, GetBeamtimeMetaMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeGetMeta,
-                                        expected_credentials_str_old,
+                                        expected_credentials_str,
                                         ""), true)).WillOnce(
                                             Return(nullptr));
 

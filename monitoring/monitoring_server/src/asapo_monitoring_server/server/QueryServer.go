@@ -456,7 +456,10 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 
 	for result.Next() {
 		if result.Record().Values()["receiverName"] != nil { // data is coming from receiver => means it must be a producer
-			stepId := result.Record().Values()["pipelineStepId"].(string)
+			stepId,ok := result.Record().Values()["pipelineStepId"].(string)
+			if !ok {
+				stepId = "defaultStep"
+			}
 			source := result.Record().Values()["source"].(string)
 			producerInstanceId := result.Record().Values()["producerInstanceId"].(string)
 			var step = getOrCreateStep(stepId)

@@ -45,6 +45,11 @@ class InitialAuthorizationHandlerTests : public Test {
 
 TEST_F(InitialAuthorizationHandlerTests, AuthorizeOk) {
     ExpectAuthMocks();
+    expected_auth_data->producer_instance_id="producer_instance_id";
+    expected_auth_data->pipeline_step_id="pipeline_step_id";
+    EXPECT_CALL(*mock_request, SetProducerInstanceId(expected_auth_data->producer_instance_id));
+    EXPECT_CALL(*mock_request, SetPipelineStepId(expected_auth_data->pipeline_step_id));
+
     auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(nullptr));

@@ -11,7 +11,8 @@
 namespace asapo {
 
 std::string GetRequestString(const Request *request, const std::string &source_credentials) {
-    std::string request_string = std::string("{\"SourceCredentials\":\"") +
+//    request->GetApiVersion()
+    std::string request_string = std::string("{\"NewFormat\":True,\"SourceCredentials\":\"") +
         source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
     return request_string;
 }

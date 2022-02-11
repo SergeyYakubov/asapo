@@ -30,8 +30,8 @@ class RequestHandlerTcp: public RequestHandler {
     const AbstractLogger* log__;
     ReceiverDiscoveryService* discovery_service__;
   private:
-    Error Authorize(bool new_format, const std::string& source_credentials);
-    Error ConnectToReceiver(bool new_format, const std::string& source_credentials, const std::string& receiver_address);
+    Error Authorize(const std::string& source_credentials);
+    Error ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address);
     bool SendToOneOfTheReceivers(ProducerRequest* request, bool* retry);
     Error SendRequestContent(const ProducerRequest* request);
     Error ReceiveResponse(std::string* response);

@@ -21,16 +21,6 @@ TEST(CreateProducer, TcpProducer) {
     EXPECT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
 }
 
-TEST(CreateProducer, ErrorBeamtime) {
-    asapo::Error err;
-    std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
-    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{asapo::SourceType::kRaw, "instance", "step", expected_beamtimeid, "", "", ""}, 3600000, &err);
-
-    EXPECT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
-    EXPECT_THAT(producer, Eq(nullptr));
-}
-
 TEST(CreateProducer, ErrorOnBothAutoBeamlineBeamtime) {
     asapo::SourceCredentials creds{asapo::SourceType::kRaw, "instance", "step", "auto", "auto", "subname", "token"};
     asapo::Error err;
