@@ -12,51 +12,44 @@ import (
 )
 
 type SourceCredentials struct {
-	BeamtimeId 		string
-	Beamline   		string
-	DataSource     	string
-	Token      		string
-	Type 	   		string
+	BeamtimeId string
+	Beamline   string
+	DataSource string
+	Token      string
+	Type       string
 
 	// Optional
-	InstanceId		string  `json:",omitempty"`
-	PipelineStep	string  `json:",omitempty"`
+	InstanceId   string `json:",omitempty"`
+	PipelineStep string `json:",omitempty"`
 }
 
 type authorizationRequest struct {
 	SourceCredentials string
 	OriginHost        string
-	NewFormat 		  bool
 }
 
 func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
 	vals := strings.Split(request.SourceCredentials, "%")
 	nvals := len(vals)
-	if (request.NewFormat && nvals < 7) || (!request.NewFormat && nvals < 5) {
+	if nvals < 7 {
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
 
 	var creds SourceCredentials
 
-	if request.NewFormat {
-		creds = SourceCredentials{
-			Type:       vals[0],
-			InstanceId: vals[1], PipelineStep: vals[2],
-			BeamtimeId: vals[3], Beamline: vals[4], Token: vals[nvals-1]}
-		creds.DataSource = strings.Join(vals[5:nvals-1], "%")
-		if creds.InstanceId == "" {
-			creds.InstanceId = "auto"
-		}
-
-		if creds.PipelineStep == "" {
-			creds.PipelineStep = "auto"
-		}
-	} else {
-		creds = SourceCredentials{
-			Type:       vals[0],
-			BeamtimeId: vals[1], Beamline: vals[2], Token: vals[nvals-1]}
-		creds.DataSource = strings.Join(vals[3:nvals-1], "%")
+	creds = SourceCredentials{
+		Type:       vals[0],
+		InstanceId: vals[1], PipelineStep: vals[2],
+		BeamtimeId: vals[3], Beamline: vals[4], Token: vals[nvals-1]}
+	creds.DataSource = strings.Join(vals[5:nvals-1], "%")
+	if creds.InstanceId == "" {
+		creds.InstanceId = "auto"
 	}
+
+	if creds.PipelineStep == "" {
+		creds.PipelineStep = "auto"
+	}
+
 	if creds.DataSource == "" {
 		creds.DataSource = "detector"
 	}
@@ -68,8 +61,6 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 	if creds.BeamtimeId == "" {
 		creds.BeamtimeId = "auto"
 	}
-
-
 
 	if creds.InstanceId == "auto" || creds.PipelineStep == "auto" {
 		return SourceCredentials{}, errors.New("InstanceId and PipelineStep must be already set on client side")
@@ -364,12 +355,12 @@ func authorize(request authorizationRequest, creds SourceCredentials) (common.Be
 
 	meta.AccessTypes = accessTypes
 	log.WithFields(map[string]interface{}{
-		"beamline":creds.Beamline,
-		"beamtime":creds.BeamtimeId,
-		"origin":request.OriginHost,
-		"type":meta.Type,
-		"onlinePath":meta.OnlinePath,
-		"offlinePath":meta.OfflinePath,
+		"beamline":    creds.Beamline,
+		"beamtime":    creds.BeamtimeId,
+		"origin":      request.OriginHost,
+		"type":        meta.Type,
+		"onlinePath":  meta.OnlinePath,
+		"offlinePath": meta.OfflinePath,
 	}).Debug("authorized credentials")
 	return meta, nil
 }
