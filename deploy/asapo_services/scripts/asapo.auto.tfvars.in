@@ -43,6 +43,8 @@ discovery_total_memory_size = 256
 prometheus_total_memory_size = 256
 alertmanager_total_memory_size = 256
 monitoring_server_total_memory_size = 256
+monitoring_proxy_total_memory_size = 256
+monitoring_ui_total_memory_size = 256
 
 ldap_uri = "ldap://localhost:389"
 
@@ -57,6 +59,8 @@ kibana_port = 5601
 
 discovery_port = 5006
 authorizer_port = 5007
+monitoring_proxy_port = 5008
+monitoring_ui_port = 5009
 
 consul_dns_port = 8600
 prometheus_port = 9090

@@ -16,6 +16,7 @@ data "template_file" "nginx" {
     consul_dns_port = "${var.consul_dns_port}"
     prometheus_port = "${var.prometheus_port}"
     alertmanager_port = "${var.alertmanager_port}"
+    monitoring_ui_port = "${var.monitoring_ui_port}"
   }
 }
 
@@ -108,6 +109,10 @@ data "template_file" "asapo_perfmetrics" {
     influxdb_rpc_port = "${var.influxdb_rpc_port}"
     perf_monitor = "${var.perf_monitor}"
     monitoring_server_total_memory_size = "${var.monitoring_server_total_memory_size}"
+    monitoring_proxy_total_memory_size = "${var.monitoring_proxy_total_memory_size}"
+    monitoring_ui_total_memory_size = "${var.monitoring_ui_total_memory_size}"
+    monitoring_proxy_port = "${var.monitoring_proxy_port}"
+    monitoring_ui_port = "${var.monitoring_ui_port}"
     force_pull_images = "${var.force_pull_images}"
     nomad_logs = "${var.nomad_logs}"
     scripts_dir = "${var.job_scripts_dir}"
