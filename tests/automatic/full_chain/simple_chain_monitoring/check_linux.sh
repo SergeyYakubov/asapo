@@ -29,7 +29,7 @@ Cleanup() {
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     set +e
     influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
-    influx -database ${new_monitor_database_name} -execute "drop series from /.*/"
+#    influx -database ${new_monitor_database_name} -execute "drop series from /.*/"
 }
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
