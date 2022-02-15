@@ -26,7 +26,6 @@ using asapo::MockIO;
 using asapo::MockHttpClient;
 using asapo::MockNetClient;
 using asapo::HttpCode;
-using asapo::SourceCredentialsVersion;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -138,9 +137,6 @@ class ConsumerImplTests : public Test {
         fts_consumer->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         fts_consumer->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
 
-        asapo::Error err1 = consumer->EnableNewMonitoringApiFormat(true);
-        asapo::Error err2 = fts_consumer->EnableNewMonitoringApiFormat(true);
-
         {
             ON_CALL(mock_http_client, UrlEscape_t(expected_instance_id)).WillByDefault(Return(expected_instance_id_encoded));
             ON_CALL(mock_http_client, UrlEscape_t(expected_pipeline_step)).WillByDefault(Return(expected_pipeline_step_encoded));
@@ -236,7 +232,7 @@ class ConsumerImplTests : public Test {
         return fi;
     }
 
-    void CheckDefaultingOfCredentials(asapo::SourceCredentials credentials, SourceCredentialsVersion formatVersion, std::string expectedUrlPath) {
+    void CheckDefaultingOfCredentials(asapo::SourceCredentials credentials, std::string expectedUrlPath) {
         consumer->io__.release();
         consumer->httpclient__.release();
         consumer->net_client__.release();
@@ -249,8 +245,6 @@ class ConsumerImplTests : public Test {
         consumer->io__ = std::unique_ptr<IO> {&mock_io};
         consumer->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         consumer->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
-        consumer->EnableNewMonitoringApiFormat(formatVersion == asapo::SourceCredentialsVersion::NewVersion);
-
         MockGetBrokerUri();
 
         EXPECT_CALL(mock_http_client,
@@ -273,24 +267,16 @@ TEST_F(ConsumerImplTests, DefaultStreamIsDetector) {
     CheckDefaultingOfCredentials(
             asapo::SourceCredentials{
                 asapo::SourceType::kProcessed, "instance", "step", "beamtime_id", "", "", expected_token
-                }, asapo::SourceCredentialsVersion::NewVersion,
+                },
                 "/beamtime/beamtime_id/detector/stream/" + expected_group_id_encoded + "/next?token=" + expected_token
                 + "&instanceid=instance&pipelinestep=step");
-}
-
-TEST_F(ConsumerImplTests, DefaultStreamIsDetector_OldFormat) {
-    CheckDefaultingOfCredentials(
-            asapo::SourceCredentials{
-                asapo::SourceType::kProcessed, "instance", "step", "beamtime_id", "", "", expected_token
-                }, asapo::SourceCredentialsVersion::OldVersion,
-                "/beamtime/beamtime_id/detector/stream/" + expected_group_id_encoded + "/next?token=" + expected_token);
 }
 
 TEST_F(ConsumerImplTests, DefaultPipelineStepIsDefaultStep) {
     CheckDefaultingOfCredentials(
             asapo::SourceCredentials{
                 asapo::SourceType::kProcessed, "instance", "", "beamtime_id", "a", "b", expected_token
-                }, asapo::SourceCredentialsVersion::NewVersion,
+                },
                 "/beamtime/beamtime_id/b/stream/" + expected_group_id_encoded + "/next?token=" + expected_token
                 + "&instanceid=instance&pipelinestep=DefaultStep");
 }
@@ -299,7 +285,7 @@ TEST_F(ConsumerImplTests, AutoPipelineStepIsDefaultStep) {
     CheckDefaultingOfCredentials(
             asapo::SourceCredentials{
                 asapo::SourceType::kProcessed, "instance", "auto", "beamtime_id", "a", "b", expected_token
-                }, asapo::SourceCredentialsVersion::NewVersion,
+                },
                 "/beamtime/beamtime_id/b/stream/" + expected_group_id_encoded + "/next?token=" + expected_token
                 + "&instanceid=instance&pipelinestep=DefaultStep");
 }

@@ -62,6 +62,11 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 		creds.BeamtimeId = "auto"
 	}
 
+	log.WithFields(map[string]interface{}{
+		"creds":    request.SourceCredentials,
+	}).Debug("received credentials")
+
+
 	if creds.InstanceId == "auto" || creds.PipelineStep == "auto" {
 		return SourceCredentials{}, errors.New("InstanceId and PipelineStep must be already set on client side")
 	}

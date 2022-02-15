@@ -169,6 +169,7 @@ MATCHER_P5(M_CheckSendRequest, op_code, file_id, file_size, message, stream,
         ((asapo::GenericRequestHeader *) arg)->data_id == uint64_t(file_id) &&
         ((asapo::GenericRequestHeader *) arg)->data_size == uint64_t(file_size) &&
         strcmp(((asapo::GenericRequestHeader *) arg)->message, message) == 0 &&
+        strcmp(((asapo::GenericRequestHeader *) arg)->api_version, "v0.6") == 0 &&
         strcmp(((asapo::GenericRequestHeader *) arg)->stream, stream) == 0;
 }
 

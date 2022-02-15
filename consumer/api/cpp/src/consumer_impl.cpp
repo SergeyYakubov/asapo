@@ -182,12 +182,8 @@ void ConsumerImpl::ForceNoRdma() {
     should_try_rdma_first_ = false;
 }
 
-Error ConsumerImpl::EnableNewMonitoringApiFormat(bool enabled) {
-    if (enabled && (request_sender_details_prefix_.length()-5 /*spare a few bytes for stream*/) >= kMaxMessageSize) {
-        return GeneralErrorTemplates::kSimpleError.Generate("Source credentials are too long");
-    }
-
-    use_new_api_format_ = enabled;
+Error ConsumerImpl::DisableMonitoring(bool disable) {
+    use_new_api_format_ = !disable;
     return nullptr;
 }
 

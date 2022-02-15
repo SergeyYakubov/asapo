@@ -81,8 +81,8 @@ class Consumer {
     //! This will only have an effect if no previous connection attempted was made on this Consumer.
     virtual void ForceNoRdma() = 0;
 
-    //! Should be done before files are transferred, if set to true, connected services will receive the InstanceId and PipelineStep of this Consumer.
-    virtual Error EnableNewMonitoringApiFormat(bool enabled) = 0;
+    //! Should be done before files are transferred, if set to true, connected services will not receive the InstanceId and PipelineStep of this Consumer.
+    virtual Error DisableMonitoring(bool disable) = 0;
 
     //! Returns the current network connection type
     /*!

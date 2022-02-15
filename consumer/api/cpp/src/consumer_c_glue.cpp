@@ -240,8 +240,8 @@ extern "C" {
         return static_cast<AsapoNetworkConnectionType>(consumer->handle->CurrentConnectionType());
     }
 
-//! wraps asapo::Consumer::EnableNewMonitoringApiFormat()
-/// \copydoc asapo::Consumer::EnableNewMonitoringApiFormat()
+//! wraps asapo::Consumer::DisableMonitoring()
+/// \copydoc asapo::Consumer::DisableMonitoring()
 /// \param[in] consumer the handle of the consumer concerned
 /// \param[in] enabled set this to true if the new API format should be used
 /// \param[out] error will contain a pointer to an AsapoErrorHandle if a problem occured, NULL else.

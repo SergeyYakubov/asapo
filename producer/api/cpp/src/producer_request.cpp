@@ -32,7 +32,6 @@ ProducerRequest::ProducerRequest(
     } else {
         strcpy(header.api_version, "v0.0");
     }
-
 }
 
 bool ProducerRequest::NeedSend() const {

@@ -116,7 +116,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         void SetLogLevel(LogLevel level)
         uint64_t GetRequestsQueueSize()
         uint64_t GetRequestsQueueVolumeMb()
-        Error EnableNewMonitoringApiFormat(bool enabled)
+        Error DisableMonitoring(bool enabled)
         void SetRequestsQueueLimits(uint64_t size, uint64_t volume)
         Error WaitRequestsFinished(uint64_t timeout_ms)
         Error SendStreamFinishedFlag(string stream, uint64_t last_id, string next_stream, RequestCallback callback)

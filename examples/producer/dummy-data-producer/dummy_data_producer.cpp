@@ -225,7 +225,6 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 
     producer->EnableLocalLog(true);
     producer->SetLogLevel(asapo::LogLevel::Info);
-    producer->EnableNewMonitoringApiFormat(false);
     return producer;
 }
 

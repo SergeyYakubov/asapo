@@ -116,9 +116,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 				monitoring.SendBrokerRequest(
 					consumerInstanceId,
 					pipelineStepId,
-
 					op,
-
 					beamtimeId,
 					datasource,
 					stream,

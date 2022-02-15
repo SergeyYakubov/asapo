@@ -116,7 +116,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         //consumer->ForceNoRdma();
 
         consumer->SetTimeout((uint64_t) params.timeout_ms);
-        consumer->EnableNewMonitoringApiFormat(true);
+      consumer->DisableMonitoring(true);
         asapo::MessageData data;
 
         lock.lock();
