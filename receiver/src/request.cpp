@@ -50,6 +50,7 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
     auto err = PrepareDataBufferFromCache();
     if (err) {
         log__->Warning(LogMessageWithFields(err).Append(RequestLog("", this)));
+        cache__ = nullptr;
         return PrepareDataBufferFromMemory();
     }
     return nullptr;

@@ -69,3 +69,6 @@ alertmanager_port = 9093
 n_receivers = 1
 n_brokers = 1
 n_fts = 1
+
+receiver_kafka_enabled = false
+receiver_kafka_metadata_broker_list = ""
