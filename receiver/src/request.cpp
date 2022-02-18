@@ -1,4 +1,6 @@
 #include "request.h"
+
+#include <utility>
 #include "asapo/io/io_factory.h"
 #include "request_handler/request_handler_db_check_request.h"
 #include "receiver_logger.h"
@@ -7,10 +9,11 @@ namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
                  SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache,
-                 const RequestHandlerDbCheckRequest* db_check_handler) : io__{GenerateDefaultIO()},
-    cache__{cache}, log__{GetDefaultReceiverLogger()},request_header_(header),
-    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
-    check_duplicate_request_handler_{db_check_handler} {
+                 const RequestHandlerDbCheckRequest* db_check_handler,
+                 RequestStatisticsPtr statistics) : io__{GenerateDefaultIO()},
+                                                    cache__{cache}, log__{GetDefaultReceiverLogger()}, statistics_{std::move(statistics)}, request_header_(header),
+                                                    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
+                                                    check_duplicate_request_handler_{db_check_handler} {
     origin_host_ = HostFromUri(origin_uri_);
 }
 
@@ -29,7 +32,7 @@ Error Request::PrepareDataBufferFromMemory() {
 Error Request::PrepareDataBufferFromCache() {
     Error err;
     CacheMeta* slot;
-    data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot, &err);
+    data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot, GetBeamtimeId(), GetDataSource(), GetStream(), &err);
     if (err == nullptr) {
         slot_meta_ = slot;
     } else {
@@ -47,21 +50,26 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
     auto err = PrepareDataBufferFromCache();
     if (err) {
         log__->Warning(LogMessageWithFields(err).Append(RequestLog("", this)));
+        cache__ = nullptr;
         return PrepareDataBufferFromMemory();
     }
     return nullptr;
 }
 
 
-Error Request::Handle(ReceiverStatistics* statistics) {
+Error Request::Handle() {
     Error err;
     for (auto handler : handlers_) {
-        statistics->StartTimer(handler->GetStatisticEntity());
+        if (statistics_) {
+            statistics_->StartTimer(handler->GetStatisticEntity());
+        }
         err = handler->ProcessRequest(this);
+        if (statistics_) {
+            statistics_->StopTimer();
+        }
         if (err) {
             break;
         }
-        statistics->StopTimer();
     }
     UnlockDataBufferIfNeeded();
     return err;
@@ -114,6 +122,20 @@ std::string Request::GetApiVersion() const {
     return request_header_.api_version;
 }
 
+const std::string& Request::GetProducerInstanceId() const {
+    return producer_instance_id_;
+}
+void Request::SetProducerInstanceId(std::string producer_instance_id) {
+    producer_instance_id_ = std::move(producer_instance_id);
+}
+
+const std::string& Request::GetPipelineStepId() const {
+    return pipeline_step_id_;
+}
+void Request::SetPipelineStepId(std::string pipeline_step_id) {
+    pipeline_step_id_ = std::move(pipeline_step_id);
+}
+
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;
 }
@@ -123,6 +145,7 @@ const std::string& Request::GetBeamtimeId() const {
 void Request::SetBeamtimeId(std::string beamtime_id) {
     beamtime_id_ = std::move(beamtime_id);
 }
+
 
 Opcode Request::GetOpCode() const {
     return request_header_.op_code;
@@ -223,6 +246,14 @@ void Request::SetSourceType(SourceType type) {
 }
 SourceType Request::GetSourceType() const {
     return source_type_;
+}
+
+RequestStatistics* Request::GetStatistics() {
+    if (statistics_) {
+        return statistics_.get();
+    } else {
+        return nullptr;
+    }
 }
 
 const std::string& Request::GetOriginHost() const {

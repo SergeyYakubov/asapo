@@ -29,7 +29,9 @@ class SecondaryAuthorizationHandlerTests : public Test {
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
 
     std::string expected_source_credentials = "source_creds";
-    std::string expected_beamtime_id = "expected_beamtime";
+    std::string expected_instance_id = "expected_instance_id";
+    std::string expected_pipeline_step_id = "expected_pipeline_step_id";
+    std::string expected_beamtime_id = "expected_beamtime_id";
     std::string expected_beamline = "expected_beamline";
     std::string expected_data_source = "expected_data_source";
     std::string expected_beamline_path = "expected_beamline_path";
@@ -45,10 +47,12 @@ class SecondaryAuthorizationHandlerTests : public Test {
         auth_data.online_path = expected_beamline_path;
         auth_data.offline_path = expected_core_path;
         auth_data.beamline = expected_beamline;
+        auth_data.producer_instance_id = expected_instance_id;
+        auth_data.pipeline_step_id = expected_pipeline_step_id;
 
         auth_data.source_credentials = expected_source_credentials;
         GenericRequestHeader request_header;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
         handler.auth_client__ = std::unique_ptr<asapo::AuthorizationClient> {&mock_authorization_client};
         config.authorization_interval_ms = 10000;
         SetReceiverConfig(config, "none");
@@ -58,6 +62,8 @@ class SecondaryAuthorizationHandlerTests : public Test {
     }
     void ExpectAuth();
     void ExpectSetRequest() {
+        EXPECT_CALL(*mock_request, SetProducerInstanceId(expected_instance_id));
+        EXPECT_CALL(*mock_request, SetPipelineStepId(expected_pipeline_step_id));
         EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
         EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
         EXPECT_CALL(*mock_request, SetDataSource(expected_data_source));

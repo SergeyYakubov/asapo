@@ -145,7 +145,7 @@ class TcpClientTests : public Test {
 TEST_F(TcpClientTests, ErrorGetNewConnection) {
     ExpectNewConnection(false, false);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -154,7 +154,7 @@ TEST_F(TcpClientTests, SendHeaderForNewConnectionReturnsError) {
     ExpectNewConnection(false, true);
     ExpectSendRequest(expected_sd, false);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kBadFileNumber));
 }
@@ -164,7 +164,7 @@ TEST_F(TcpClientTests, OnErrorSendHeaderTriesToReconnectAndFails) {
     ExpectSendRequest(expected_sd, false);
     ExpectReconnect(false);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -175,7 +175,7 @@ TEST_F(TcpClientTests, OnErrorSendHeaderTriesToReconnectAndSendsAnotherRequest) 
     ExpectReconnect(true);
     ExpectSendRequest(expected_sd + 1, false);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kBadFileNumber));
 }
@@ -185,7 +185,7 @@ TEST_F(TcpClientTests, GetResponceReturnsError) {
     ExpectSendRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, false, asapo::kNetErrorNoError);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kConnectionRefused));
 }
@@ -196,7 +196,7 @@ TEST_F(TcpClientTests, GetResponceReturnsNoData) {
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoData);
     EXPECT_CALL(mock_connection_pool, ReleaseConnection(expected_sd));
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -207,7 +207,7 @@ TEST_F(TcpClientTests, GetResponceReturnsWrongRequest) {
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorWrongRequest);
     EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -219,7 +219,7 @@ TEST_F(TcpClientTests, GetResponceReturnsUnsupported) {
     EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
     EXPECT_CALL(mock_connection_pool, ReleaseConnection(expected_sd));
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -231,7 +231,7 @@ TEST_F(TcpClientTests, ErrorGettingData) {
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoError);
     ExpectGetData(expected_sd, false);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kTimeout));
 }
@@ -242,7 +242,7 @@ TEST_F(TcpClientTests, OkGettingData) {
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoError);
     ExpectGetData(expected_sd, true);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -255,7 +255,7 @@ TEST_F(TcpClientTests, OkGettingDataWithReconnect) {
     ExpectGetResponce(expected_sd + 1, true, asapo::kNetErrorNoError);
     ExpectGetData(expected_sd + 1, true);
 
-    auto err = client->GetData(&info, &data);
+    auto err = client->GetData(&info, "abc", &data);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

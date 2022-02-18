@@ -59,6 +59,8 @@ void asapo_stream_info_get_timestamp_last_entry(const AsapoStreamInfoHandle info
                                                 struct timespec* stamp);
 
 AsapoSourceCredentialsHandle asapo_create_source_credentials(enum AsapoSourceType type,
+        const char* instanceId,
+        const char* pipelineStep,
         const char* beamtime,
         const char* beamline,
         const char* data_source,

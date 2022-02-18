@@ -22,7 +22,7 @@ class KafkaNotifyHandlerTests : public Test {
 
     void SetUp() override {
         GenericRequestHeader request_header;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
     }
 
     void TearDown() override {

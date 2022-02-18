@@ -29,7 +29,7 @@ job "asapo-brokers" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "yakser/asapo-broker${image_suffix}"
+        image = "${docker_repository}/asapo-broker${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/broker/config.json"]
         %{ if ! nomad_logs  }

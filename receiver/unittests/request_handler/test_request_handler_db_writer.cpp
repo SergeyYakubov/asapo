@@ -63,7 +63,7 @@ class DbWriterHandlerTests : public Test {
         request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", &mock_db_check_handler});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", &mock_db_check_handler, nullptr});
         config.database_uri = "127.0.0.1:27017";
         config.dataserver.advertise_uri = expected_host_ip + ":" + std::to_string(expected_port);
         config.dataserver.listen_port = expected_port;
@@ -88,6 +88,7 @@ MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.buf_id != file.buf_id) return false;
     if (arg.dataset_substream != file.dataset_substream) return false;
     if (arg.name != file.name) return false;
+    if (arg.stream != file.stream) return false;
     if (arg.id != file.id) return false;
     if (arg.metadata != file.metadata) return false;
 
@@ -169,6 +170,7 @@ MessageMeta DbWriterHandlerTests::PrepareMessageMeta(bool substream) {
     }
     message_meta.buf_id = expected_buf_id;
     message_meta.source = expected_host_ip + ":" + std::to_string(expected_port);
+    message_meta.stream = expected_stream;
     message_meta.metadata = expected_metadata;
     return message_meta;
 }

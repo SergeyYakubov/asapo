@@ -16,6 +16,7 @@ for python_path in /opt/python/cp{35,36,37,38,39}*; do
     numpy_version=${numpy_versions[$python_version]}
     echo "building wheel for python_version=$python_version with numpy_version=$numpy_version"
 
+    mkdir -p /asapo/build
     cd /asapo/build
     cmake -DENABLE_LIBFABRIC=on \
           -DCMAKE_BUILD_TYPE="Release" \

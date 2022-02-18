@@ -34,7 +34,7 @@ job "asapo-receivers" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
 	    privileged = true
-        image = "yakser/asapo-receiver${image_suffix}"
+        image = "${docker_repository}/asapo-receiver${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/receiver/config.json",
                    "${offline_dir}:${offline_dir}",

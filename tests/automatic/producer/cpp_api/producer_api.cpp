@@ -66,7 +66,8 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.server, 2,
                                             asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed, args.beamtime,
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                    "auto", "auto", args.beamtime,
                                                     "", args.source, ""}, 60000, &err);
     if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;

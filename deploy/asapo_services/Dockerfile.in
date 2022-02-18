@@ -1,4 +1,4 @@
-FROM yakser/asapo-nomad-cluster
+FROM @ASAPO_DOCKER_REPOSITORY@/asapo-nomad-cluster
 
 MAINTAINER DESY IT
 

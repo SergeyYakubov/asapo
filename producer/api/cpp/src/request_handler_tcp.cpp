@@ -4,6 +4,8 @@
 #include "asapo/io/io_factory.h"
 #include "producer_request.h"
 
+#include "asapo/common/internal/version.h"
+
 namespace asapo {
 
 RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id,
@@ -17,6 +19,7 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
 
 Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
     GenericRequestHeader header{kOpcodeAuthorize, 0, 0, source_credentials.size(), ""};
+    strcpy(header.api_version, kProducerProtocol.GetReceiverVersion().c_str());
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
     if (err) {
@@ -237,7 +240,7 @@ bool ImmediateCallbackAfterError(const Error& err) {
 }
 
 bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
-    for (auto receiver_uri : receivers_list_) {
+    for (const auto& receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
             if (ImmediateCallbackAfterError(err)) {

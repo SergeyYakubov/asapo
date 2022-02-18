@@ -14,6 +14,7 @@
 #include "asapo/common/networking.h"
 #include "asapo/io/io.h"
 #include "request.h"
+#include "monitoring/receiver_monitoring_client.h"
 #include "statistics/receiver_statistics.h"
 #include "asapo/logger/logger.h"
 #include "request_handler/requests_dispatcher.h"
@@ -28,7 +29,7 @@ class Connection {
     int socket_fd_;
   public:
 
-    Connection(SocketDescriptor socket_fd, const std::string& address, SharedCache cache, KafkaClient* kafkaClient, std::string receiver_tag);
+    Connection(SocketDescriptor socket_fd, const std::string& address, SharedReceiverMonitoringClient monitoring, SharedCache cache,KafkaClient* kafkaClient, std::string receiver_tag);
     ~Connection() = default;
 
     void Listen() const noexcept;

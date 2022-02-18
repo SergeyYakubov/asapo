@@ -61,6 +61,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     pass
   cdef Error GetSourceTypeFromString(string types,SourceType * type)
   struct  SourceCredentials:
+    string instance_id
+    string pipeline_step
     string beamtime_id
     string beamline
     string data_source
@@ -112,8 +114,9 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         Error Send__(const MessageHeader& message_header, void* data, uint64_t ingest_mode, string stream, RequestCallback callback)
         void StopThreads__()
         void SetLogLevel(LogLevel level)
-        uint64_t  GetRequestsQueueSize()
-        uint64_t  GetRequestsQueueVolumeMb()
+        uint64_t GetRequestsQueueSize()
+        uint64_t GetRequestsQueueVolumeMb()
+        Error DisableMonitoring(bool enabled)
         void SetRequestsQueueLimits(uint64_t size, uint64_t volume)
         Error WaitRequestsFinished(uint64_t timeout_ms)
         Error SendStreamFinishedFlag(string stream, uint64_t last_id, string next_stream, RequestCallback callback)

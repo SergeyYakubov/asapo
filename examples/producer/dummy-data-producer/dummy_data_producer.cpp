@@ -20,7 +20,7 @@ struct Args {
     std::string beamtime_id;
     std::string data_source;
     std::string token;
-    size_t data_size;
+    size_t data_size_bytes;
     uint64_t iterations;
     uint8_t nthreads;
     uint64_t mode;
@@ -29,20 +29,22 @@ struct Args {
     bool write_files;
     asapo::SourceType type;
     asapo::RequestHandlerType handler;
+    std::string pipeline_name = "DummyDataProducerPipelineStep";
 };
 
 void PrintCommandArguments(const Args& args) {
     std::cout << "discovery_service_endpoint: " << args.discovery_service_endpoint << std::endl
               << "beamtime_id: " << args.beamtime_id << std::endl
-              << "Package size: " << args.data_size / 1000 << "k" << std::endl
+              << "Package size: " << args.data_size_bytes / 1000 << "k" << std::endl
               << "iterations: " << args.iterations << std::endl
-              << "nthreads: " << args.nthreads << std::endl
+              << "nthreads: " << (int)args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
               << "Write files: " << args.write_files << std::endl
-              << "Tcp mode: " << ((args.mode % 10) == 0) << std::endl
+              << "Tcp mode: " << ((args.mode % 10) == 0 ) << std::endl
               << "Raw: " << (args.mode / 100 == 1) << std::endl
               << "timeout: " << args.timeout_ms << std::endl
               << "messages in set: " << args.messages_in_set << std::endl
+              << "pipelineStep: " << args.pipeline_name << std::endl
               << std::endl;
 }
 
@@ -69,10 +71,10 @@ void TryGetDataSourceAndToken(Args* args) {
 }
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
-    if (argc != 8 && argc != 9) {
+    if (argc != 8 && argc != 9 && argc != 10) {
         std::cout <<
                   "Usage: " << argv[0] <<
-                  " <destination> <beamtime_id[%<data_source>%<token>]> <number_of_kbyte> <iterations> <nthreads>"
+                  " <destination> <beamtime_id[%<data_source>[%<token>]]> <number_of_kbyte> <iterations> <nthreads> [pipeline_name]"
                   " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n messages in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
@@ -81,20 +83,24 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->discovery_service_endpoint = argv[1];
         args->beamtime_id = argv[2];
         TryGetDataSourceAndToken(args);
-        args->data_size = std::stoull(argv[3]) * 1000;
+        args->data_size_bytes = std::stoull(argv[3]) * 1000;
         args->iterations = std::stoull(argv[4]);
         args->nthreads = static_cast<uint8_t>(std::stoi(argv[5]));
         args->mode = std::stoull(argv[6]);
         args->timeout_ms = std::stoull(argv[7]) * 1000;
-        if (argc == 9) {
+        if (argc >= 9) {
             args->messages_in_set = std::stoull(argv[8]);
         } else {
             args->messages_in_set = 1;
         }
+        if (argc >= 10) {
+            args->pipeline_name = argv[9];
+        }
+
         args->write_files = (args->mode % 100) / 10 == 0;
         args->type = args->mode / 100 == 0 ? asapo::SourceType::kProcessed : asapo::SourceType::kRaw;
         args->handler = args->mode % 10 == 0 ? asapo::RequestHandlerType::kTcp
-                        : asapo::RequestHandlerType::kFilesystem;
+                                             : asapo::RequestHandlerType::kFilesystem;
         PrintCommandArguments(*args);
         return;
     } catch (std::exception& e) {
@@ -133,7 +139,7 @@ asapo::MessageData CreateMemoryBuffer(size_t size) {
 
 asapo::MessageHeader PrepareMessageHeader(uint64_t i, const Args& args) {
     std::string message_folder = GetStringFromSourceType(args.type) + asapo::kPathSeparator;
-    asapo::MessageHeader message_header{i + 1, args.data_size, std::to_string(i + 1)};
+    asapo::MessageHeader message_header{i + 1, args.data_size_bytes, std::to_string(i + 1)};
     std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
     if (!args.data_source.empty()) {
         message_header.file_name = args.data_source + "/" + message_header.file_name;
@@ -144,7 +150,7 @@ asapo::MessageHeader PrepareMessageHeader(uint64_t i, const Args& args) {
 }
 
 asapo::Error Send(asapo::Producer* producer, const asapo::MessageHeader& message_header, const Args& args) {
-    auto buffer = CreateMemoryBuffer(args.data_size);
+    auto buffer = CreateMemoryBuffer(args.data_size_bytes);
     return producer->Send(message_header,
                           std::move(buffer),
                           args.write_files ? asapo::kDefaultIngestMode : asapo::kTransferData,
@@ -207,10 +213,11 @@ bool SendDummyData(asapo::Producer* producer, const Args& args) {
 std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads, args.handler,
-    asapo::SourceCredentials{
-        args.type, args.beamtime_id,
-        "", args.data_source, args.token},
-    3600000, &err);
+                                            asapo::SourceCredentials{
+                                                    args.type, "DummyDataProducer",
+                                                    args.pipeline_name, args.beamtime_id, "", args.data_source, args.token
+                                            },
+                                            3600000, &err);
     if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -226,7 +233,7 @@ void PrintOutput(const Args& args, const system_clock::time_point& start) {
     double duration_sec =
         static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - start).count())
         / 1000.0;
-    double size_gb = static_cast<double>(args.data_size * args.iterations) / 1000.0 / 1000.0 / 1000.0 * 8.0;
+    double size_gb = static_cast<double>(args.data_size_bytes * args.iterations) / 1000.0 / 1000.0 / 1000.0 * 8.0;
     double rate = static_cast<double>(args.iterations) / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;

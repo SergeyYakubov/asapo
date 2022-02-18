@@ -61,6 +61,7 @@ class ProducerImpl : public Producer {
     Error DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const override;
 
     AbstractLogger* log__;
+    std::unique_ptr<IO> io__;
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<RequestPool> request_pool__;
 
@@ -92,6 +93,7 @@ class ProducerImpl : public Producer {
                RequestCallback callback, bool manage_data_memory);
     GenericRequestHeader GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
                                                  uint64_t ingest_mode);
+    std::unique_ptr<SourceCredentials> last_creds_;
     std::string source_cred_string_;
     uint64_t timeout_ms_;
     std::string endpoint_;
@@ -99,6 +101,7 @@ class ProducerImpl : public Producer {
                                bool* supported) const;
     std::string GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const;
 
+    Error RefreshSourceCredentialString(SourceCredentials source_cred);
 };
 
 struct ReceiverResponse {

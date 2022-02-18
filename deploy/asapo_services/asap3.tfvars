@@ -1,11 +1,11 @@
 elk_logs = true
 perf_monitor = true
 
+asapo_docker_repository = "yakser"
 asapo_imagename_suffix = ""
 asapo_image_tag = ""
 
 influxdb_version="1.8.4"
-
 
 service_dir="/gpfs/asapo/shared/service_dir"
 online_dir="/beamline"
@@ -21,7 +21,8 @@ receiver_dataserver_cache_size = 30 #gb
 receiver_receive_to_disk_threshold = 50 # mb
 receiver_dataserver_nthreads = 8
 receiver_network_modes = "tcp"
-receiver_kafka_enabled = true
+receiver_kafka_enabled = false
+receiver_kafka_metadata_broker_list = ""
 
 grafana_total_memory_size = 2000
 influxdb_total_memory_size = 2000
@@ -35,5 +36,3 @@ discovery_total_memory_size = 512
 n_receivers = 2
 n_brokers = 2
 n_fts = 2
-
-

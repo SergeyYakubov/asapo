@@ -13,7 +13,10 @@ Error RequestHandlerReceiveMetaData::ProcessRequest(Request* request) const {
 
     Error err;
     auto buf = std::unique_ptr<uint8_t[]> {new uint8_t[meta_size]};
-    io__->Receive(request->GetSocket(), (void*) buf.get(), meta_size, &err);
+    uint64_t byteCount = io__->Receive(request->GetSocket(), (void*) buf.get(), meta_size, &err);
+    if (request->GetStatistics()) {
+        request->GetStatistics()->AddIncomingBytes(byteCount);
+    }
     if (err) {
         return ReceiverErrorTemplates::kProcessingError.Generate("cannot receive metadata",std::move(err));
     }
@@ -27,7 +30,7 @@ RequestHandlerReceiveMetaData::RequestHandlerReceiveMetaData() : io__{GenerateDe
 }
 
 StatisticEntity RequestHandlerReceiveMetaData::GetStatisticEntity() const {
-    return StatisticEntity::kNetwork;
+    return StatisticEntity::kNetworkIncoming;
 }
 
 

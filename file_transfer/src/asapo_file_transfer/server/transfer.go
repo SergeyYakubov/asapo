@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 type fileTransferRequest struct {
@@ -63,11 +64,7 @@ func checkRequest(r *http.Request, ver utils.VersionNum) (string, int, error) {
 		return "", status, err
 	}
 	var fullName string
-	if ver.Id == 1 { // protocol v0.1
-		fullName = filepath.Clean(request.Folder + string(os.PathSeparator) + request.FileName)
-	} else {
-		fullName = filepath.Clean(request.Folder + string(os.PathSeparator) + request.FileName)
-	}
+	fullName = filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
 
 	if status, err := checkFileExists(r, fullName); err != nil {
 		return "", status, err
@@ -102,9 +99,24 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 		"size": fi.Size(),
 	}).Debug("sending file size")
 
+
+	start := time.Now()
+
 	fsize.FileSize = fi.Size()
 	b, _ := json.Marshal(&fsize)
 	w.Write(b)
+
+	elapsed := time.Since(start)
+
+	instanceId := r.URL.Query().Get("instanceid")
+	pipelineStep := r.URL.Query().Get("pipelinestep")
+	beamtime := r.URL.Query().Get("beamtime")
+	source := r.URL.Query().Get("source")
+	stream := r.URL.Query().Get("stream")
+	if len(instanceId) > 0 && len(pipelineStep) > 0 && len(beamtime) > 0 && len(source) > 0 && len(stream) > 0 {
+		monitoring.SendFileTransferServiceRequest(instanceId, pipelineStep, beamtime, source, stream,
+			uint64(elapsed * time.Microsecond), uint64(fsize.FileSize))
+	}
 }
 
 func checkFtsApiVersion(w http.ResponseWriter, r *http.Request) (utils.VersionNum, bool) {

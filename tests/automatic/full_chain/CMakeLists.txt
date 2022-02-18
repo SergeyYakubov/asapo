@@ -14,3 +14,7 @@ add_subdirectory(simple_chain_filegen_readdata_cache)
 add_subdirectory(simple_chain_filegen_readdata_file)
 add_subdirectory(simple_chain_dataset)
 add_subdirectory(send_recv_streams)
+
+if (UNIX)
+    add_subdirectory(simple_chain_monitoring)
+endif()

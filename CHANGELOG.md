@@ -1,4 +1,7 @@
-## 21.12.1 (in progress)
+## 22.03.0 (in progress)
+
+FEATURES
+* Monitoring: Added detailed monitoring and pipeline visualization
 
 IMPROVEMENTS
 * renamed and hid C++ macros from client code

@@ -31,6 +31,8 @@ http {
           listen {{ env "NOMAD_PORT_nginx" }};
           set $discovery_endpoint asapo-discovery.service.asapo;
           set $authorizer_endpoint asapo-authorizer.service.asapo;
+          set $monitoring_ui_endpoint asapo-monitoring-ui.service.asapo;
+          set $monitoring_proxy_endpoint asapo-monitoring-proxy.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;
           set $kibana_endpoint kibana.service.asapo;
           set $grafana_endpoint grafana.service.asapo;
@@ -78,6 +80,18 @@ http {
             rewrite ^/performance(/.*) $1 break;
             proxy_pass http://$grafana_endpoint:{{ env "NOMAD_META_grafana_port" }}$uri$is_args$args;
           }
+
+          location /tv/ {
+            rewrite ^/tv(/.*) $1 break;
+            proxy_pass http://$monitoring_ui_endpoint:{{ env "NOMAD_META_monitoring_ui_port" }}$uri$is_args$args;
+          }
+
+          location /tv-api/ {
+            rewrite ^/tv-api(/.*) $1 break;
+            proxy_http_version 1.1;
+            proxy_pass http://$monitoring_proxy_endpoint:{{ env "NOMAD_META_monitoring_proxy_port" }}$uri$is_args$args;
+          }
+
 
           location /asapo-authorizer/ {
              rewrite ^/asapo-authorizer(/.*) $1 break;

@@ -9,7 +9,7 @@ nginx_port_stream = 8402
 nginx_version = "1.14"
 
 influxdb_total_memory_size = "1024"
-influxdb_version = "latest"
+influxdb_version = "1.8.4"
 
 telegraf_total_memory_size = "256"
 telegraf_version = "latest"

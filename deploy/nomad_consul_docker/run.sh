@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+
+. ../_docker_vars.sh
+
 NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
 
 ASAPO_USER=`id -u`:`id -g`
@@ -13,5 +17,4 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -v /var/lib/docker:/var/lib/docker \
   -v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \
   -e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
-  --name asapo --net=host -d yakser/asapo-nomad-cluster
-
+  --name asapo --net=host -d $ASAPO_DOCKER_REPOSITORY/asapo-nomad-cluster

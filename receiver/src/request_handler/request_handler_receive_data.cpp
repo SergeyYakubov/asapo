@@ -19,7 +19,10 @@ Error RequestHandlerReceiveData::ProcessRequest(Request* request) const {
         return err;
     }
     Error io_err;
-    io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &io_err);
+    uint64_t byteCount = io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &io_err);
+    if (request->GetStatistics()) {
+        request->GetStatistics()->AddIncomingBytes(byteCount);
+    }
     if (io_err) {
         err = ReceiverErrorTemplates::kProcessingError.Generate("cannot receive data",std::move(io_err));
     }
@@ -35,7 +38,7 @@ RequestHandlerReceiveData::RequestHandlerReceiveData() : io__{GenerateDefaultIO(
 }
 
 StatisticEntity RequestHandlerReceiveData::GetStatisticEntity() const {
-    return StatisticEntity::kNetwork;
+    return StatisticEntity::kNetworkIncoming;
 }
 
 

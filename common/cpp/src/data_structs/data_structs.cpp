@@ -19,6 +19,8 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
+const std::string SourceCredentials::kDefaultInstanceId = "auto";
+const std::string SourceCredentials::kDefaultPipelineStep = "auto";
 const std::string SourceCredentials::kDefaultDataSource = "detector";
 const std::string SourceCredentials::kDefaultBeamline = "auto";
 const std::string SourceCredentials::kDefaultBeamtimeId = "auto";
@@ -68,6 +70,7 @@ std::string MessageMeta::Json() const {
                     + std::to_string(nanoseconds_from_epoch) + ","
                     "\"source\":\"" + source + "\","
                     "\"buf_id\":" + std::to_string(buf_id_int) + ","
+                    "\"stream\":\"" + stream + "\","
                     "\"dataset_substream\":" + std::to_string(dataset_substream) + ","
                     "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
                     + "}";
@@ -118,6 +121,11 @@ bool MessageMeta::SetFromJson(const std::string& json_string) {
     auto old = *this;
 
     JsonStringParser parser(json_string);
+
+    // might be missing and cannot be guaranteed for older datasets
+    if (parser.GetString("stream", &stream)) {
+        stream = "unknownStream";
+    }
 
     if (parser.GetUInt64("_id", &id) ||
             parser.GetUInt64("size", &size) ||

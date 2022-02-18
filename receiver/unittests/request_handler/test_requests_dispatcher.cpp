@@ -11,6 +11,7 @@
 
 #include "../../src/request_handler/requests_dispatcher.h"
 #include "asapo/database/db_error.h"
+#include "../../src/monitoring/receiver_monitoring_client_noop.h"
 
 
 using namespace testing;
@@ -20,7 +21,11 @@ namespace {
 
 TEST(RequestDispatcher, Constructor) {
     auto stat = std::unique_ptr<ReceiverStatistics> {new ReceiverStatistics};
-    RequestsDispatcher dispatcher{0,  "some_address", stat.get(), nullptr, nullptr};
+    auto cache = asapo::SharedCache{new asapo::DataCache{0, 0}};
+
+    auto monitoring = asapo::SharedReceiverMonitoringClient{new asapo::ReceiverMonitoringClientNoop{}};
+
+    RequestsDispatcher dispatcher{0,  "some_address", stat.get(), monitoring, cache, nullptr};
     ASSERT_THAT(dynamic_cast<const asapo::ReceiverStatistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
@@ -30,28 +35,31 @@ TEST(RequestDispatcher, Constructor) {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string uri = ""):
-        Request(request_header, socket_fd, uri, nullptr, nullptr) {};
-    Error Handle(ReceiverStatistics*) override {
+        Request(request_header, socket_fd, uri, nullptr, nullptr, nullptr) {};
+    Error Handle() override {
         return Error{Handle_t()};
     };
     MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
+    MOCK_METHOD0(GetStatistics, asapo::RequestStatistics*());
 };
 
 
 class MockRequestFactory: public asapo::RequestFactory {
   public:
-    MockRequestFactory(): RequestFactory(nullptr, nullptr) {};
+    MockRequestFactory(): RequestFactory(nullptr, nullptr, nullptr) {};
     std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                              SocketDescriptor socket_fd, std::string origin_uri,
+                                             asapo::RequestStatisticsPtr statistics,
                                              Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
-        auto res = GenerateRequest_t(request_header, socket_fd, origin_uri, &error);
+        auto res = GenerateRequest_t(request_header, socket_fd, origin_uri, statistics.get(), &error);
         err->reset(error);
         return std::unique_ptr<Request> {res};
     }
 
-    MOCK_CONST_METHOD4(GenerateRequest_t, Request * (const GenericRequestHeader&,
+    MOCK_CONST_METHOD5(GenerateRequest_t, Request * (const GenericRequestHeader&,
                                                      SocketDescriptor, std::string,
+                                                     const asapo::RequestStatistics* statistics,
                                                      ErrorInterface**));
 
 };
@@ -69,7 +77,7 @@ class RequestsDispatcherTests : public Test {
     std::string connected_uri{"some_address"};
     NiceMock<MockIO> mock_io;
     MockRequestFactory mock_factory;
-    NiceMock<MockStatistics> mock_statictics;
+    StrictMock<MockStatistics> mock_statistics;
     NiceMock<asapo::MockLogger> mock_logger;
 
     asapo::ReceiverConfig test_config;
@@ -77,12 +85,17 @@ class RequestsDispatcherTests : public Test {
     MockRequest mock_request{GenericRequestHeader{}, 1, connected_uri};
     std::unique_ptr<Request> request{&mock_request};
     GenericNetworkResponse response;
+
+    std::unique_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+
+
     void SetUp() override {
+        mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
         test_config.authorization_interval_ms = 0;
         SetReceiverConfig(test_config, "none");
-        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics, nullptr, nullptr}};
+        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statistics, nullptr, nullptr, nullptr}};
         dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
-        dispatcher->statistics__ = &mock_statictics;
+        dispatcher->statistics__ = &mock_statistics;
         dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};
         dispatcher->log__ = &mock_logger;
 
@@ -104,9 +117,9 @@ class RequestsDispatcherTests : public Test {
 
     }
     void MockCreateRequest(bool error ) {
-        EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _, _))
+        EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _, _, _))
         .WillOnce(
-            DoAll(SetArgPointee<3>(error ? asapo::ReceiverErrorTemplates::kInvalidOpCode.Generate().release() : nullptr),
+            DoAll(SetArgPointee<4>(error ? asapo::ReceiverErrorTemplates::kInvalidOpCode.Generate().release() : nullptr),
                   Return(nullptr))
         );
         if (error) {
@@ -126,6 +139,10 @@ class RequestsDispatcherTests : public Test {
         } else if (error_mode == 2) {
             EXPECT_CALL(mock_logger, Warning(_));
         }
+
+        EXPECT_CALL(mock_request, GetStatistics()).WillRepeatedly(
+            Return(mock_instanced_statistics.get())
+        );
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response"), HasSubstr(connected_uri))));
@@ -144,7 +161,6 @@ class RequestsDispatcherTests : public Test {
 
 
 TEST_F(RequestsDispatcherTests, ErrorReceivetNextRequest) {
-    EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
     MockReceiveRequest(true);
 
     Error err;
@@ -155,7 +171,6 @@ TEST_F(RequestsDispatcherTests, ErrorReceivetNextRequest) {
 
 
 TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
-    EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
     .WillOnce(
         DoAll(SetArgPointee<3>(asapo::GeneralErrorTemplates::kEndOfFile.Generate().release()),

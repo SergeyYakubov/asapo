@@ -14,6 +14,7 @@ namespace asapo {
 struct ReceiverConfig {
     std::string performance_db_uri;
     std::string performance_db_name;
+    std::string monitoring_server_url;
     bool monitor_performance = false;
     std::string database_uri;
     uint64_t listen_port = 0;

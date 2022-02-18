@@ -14,6 +14,8 @@ nomad run -detach authorizer.nmd
 nomad run -detach file_transfer.nmd
 nomad run -detach receiver_tcp.nmd
 nomad run -detach broker.nmd
+nomad run -detach monitoring.nmd
+
 
 while true
 do
@@ -25,6 +27,8 @@ do
   echo broker started
   curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-file-transfer?protocol=v0.1 --stderr -  | grep 127.0.0.1 || continue
   echo file transfer started
+  curl --silent 127.0.0.1:8400/asapo-discovery/asapo-monitoring --stderr -  | grep 127.0.0.1 || continue
+  echo monitoring started
   break
 done
 

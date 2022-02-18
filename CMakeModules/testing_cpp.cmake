@@ -21,7 +21,7 @@ if (BUILD_TESTS)
     find_package(Threads)
     find_program(MEMORYCHECK_COMMAND valgrind)
     set(MEMORYCHECK_COMMAND_OPTIONS
-            "--trace-children=yes --leak-check=full --error-exitcode=1 --suppressions=${CMAKE_SOURCE_DIR}/tests/valgrind.suppressions")
+            "--trace-children=yes --leak-check=full --error-exitcode=1 --num-callers=20 --suppressions=${CMAKE_SOURCE_DIR}/tests/valgrind.suppressions")
     if (NOT "$ENV{gtest_SOURCE_DIR}" STREQUAL "")
         set(gtest_SOURCE_DIR $ENV{gtest_SOURCE_DIR})
     endif ()
