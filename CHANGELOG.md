@@ -5,12 +5,13 @@ FEATURES
 
 IMPROVEMENTS
 * renamed and hid C++ macros from client code
+* Consumer API: return kDataNotInCache/AsapoDataNotInCacheError error if data is not in cache and cannot be on disk (due to the ingest mode producer used)
 
 BUG FIXES
 * Producer API: fixed bug segfault in Python code when sending data object which memory is from some other object
 
 INTERNAL
-* Do not return error when memory cache is not allocatable - just write to disk
+* Do not return error when receiver cannot get slot in shared cache - just allocate own memory slot
 
 
 ## 21.12.0
