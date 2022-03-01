@@ -13,6 +13,7 @@ import atexit
 np.import_array()
 
 DEFAULT_INGEST_MODE = kDefaultIngestMode
+CACHE_ONLY_INGEST_MODE = kCacheOnlyIngestMode
 INGEST_MODE_TRANSFER_DATA = kTransferData
 INGEST_MODE_TRANSFER_METADATA_ONLY = kTransferMetaDataOnly
 INGEST_MODE_STORE_IN_FILESYSTEM = kStoreInFilesystem

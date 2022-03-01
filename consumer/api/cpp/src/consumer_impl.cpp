@@ -472,6 +472,10 @@ Error ConsumerImpl::GetDataFromFile(MessageMeta* info, MessageData* data) {
     return nullptr;
 }
 
+bool DataCanBeOnDisk(const MessageMeta* info) {
+    return info->ingest_mode ==0 || (info->ingest_mode & IngestModeFlags::kStoreInFilesystem);
+}
+
 Error ConsumerImpl::RetrieveData(MessageMeta* info, MessageData* data) {
     if (data == nullptr || info == nullptr) {
         return ConsumerErrorTemplates::kWrongInput.Generate("pointers are empty");
@@ -483,6 +487,10 @@ Error ConsumerImpl::RetrieveData(MessageMeta* info, MessageData* data) {
         } else {
             info->buf_id = 0;
         }
+    }
+
+    if (!DataCanBeOnDisk(info)) {
+        return ConsumerErrorTemplates::kDataNotInCache.Generate();
     }
 
     if (has_filesystem_) {
@@ -499,6 +507,7 @@ Error ConsumerImpl::GetDataIfNeeded(MessageMeta* info, MessageData* data) {
 
     return RetrieveData(info, data);
 }
+
 
 bool ConsumerImpl::DataCanBeInBuffer(const MessageMeta* info) {
     return info->buf_id > 0;

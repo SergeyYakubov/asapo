@@ -92,7 +92,7 @@ class MockRequest: public Request {
     MOCK_METHOD(const std::string &, GetBeamline, (), (const, override));
     MOCK_METHOD(asapo::Opcode, GetOpCode, (), (const, override));
     MOCK_METHOD(asapo::SocketDescriptor, GetSocket, (), (const, override));
-
+    MOCK_METHOD(uint64_t, GetIngestMode, (), (const, override));
     MOCK_METHOD(const std::string &, GetOnlinePath, (), (const, override));
     MOCK_METHOD(const std::string &, GetOfflinePath, (), (const, override));
 

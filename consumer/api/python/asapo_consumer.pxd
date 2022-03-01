@@ -115,6 +115,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   ErrorTemplateInterface kWrongInput "asapo::ConsumerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kPartialData "asapo::ConsumerErrorTemplates::kPartialData"
   ErrorTemplateInterface kUnsupportedClient "asapo::ConsumerErrorTemplates::kUnsupportedClient"
+  ErrorTemplateInterface kDataNotInCache "asapo::ConsumerErrorTemplates::kDataNotInCache"
 
 
   cdef cppclass ConsumerErrorData:

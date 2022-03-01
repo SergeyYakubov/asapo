@@ -40,6 +40,7 @@ class MessageMeta {
   uint64_t buf_id{0};
   std::string stream; // might be "unknownStream" for older datasets
   uint64_t dataset_substream{0};
+  uint64_t ingest_mode{0};
   std::string Json() const;
   bool SetFromJson(const std::string &json_string);
   std::string FullName(const std::string &base_path) const;
@@ -173,6 +174,7 @@ enum IngestModeFlags : uint64_t {
 };
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
+const uint64_t kCacheOnlyIngestMode = kTransferData | kStoreInDatabase;
 
 enum class MetaIngestOp : uint64_t {
   kInsert = 1,

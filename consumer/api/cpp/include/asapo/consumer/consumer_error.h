@@ -15,7 +15,8 @@ enum class ConsumerErrorType {
     kLocalIOError,
     kWrongInput,
     kPartialData,
-    kUnsupportedClient
+    kUnsupportedClient,
+    kDataNotInCache,
 };
 
 using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType>;
@@ -43,6 +44,10 @@ auto const kPartialData = ConsumerErrorTemplate {
 
 auto const kLocalIOError = ConsumerErrorTemplate {
     "local i/o error", ConsumerErrorType::kLocalIOError
+};
+
+auto const kDataNotInCache = ConsumerErrorTemplate {
+    "data not in cache", ConsumerErrorType::kDataNotInCache
 };
 
 auto const kStreamFinished = ConsumerErrorTemplate {

@@ -72,6 +72,7 @@ std::string MessageMeta::Json() const {
                     "\"buf_id\":" + std::to_string(buf_id_int) + ","
                     "\"stream\":\"" + stream + "\","
                     "\"dataset_substream\":" + std::to_string(dataset_substream) + ","
+                    "\"ingest_mode\":" + std::to_string(ingest_mode) + ","
                     "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
                     + "}";
     return s;
@@ -138,8 +139,8 @@ bool MessageMeta::SetFromJson(const std::string& json_string) {
         *this = old;
         return false;
     }
-
-//ignore error if meta not found
+    //ignore error if ingest_mode not found
+    parser.GetUInt64("ingest_mode", &ingest_mode);
 
     return true;
 }
