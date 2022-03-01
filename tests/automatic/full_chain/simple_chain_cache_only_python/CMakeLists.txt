@@ -1,4 +1,4 @@
-set(TARGET_NAME simple-chaine-chache-only)
+set(TARGET_NAME simple-chaine-cache-only)
 
 
 ################################
