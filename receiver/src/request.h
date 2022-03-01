@@ -45,7 +45,7 @@ class Request {
     ASAPO_VIRTUAL void* GetData() const;
     ASAPO_VIRTUAL Opcode GetOpCode() const;
     ASAPO_VIRTUAL const char* GetMessage() const;
-
+    ASAPO_VIRTUAL uint64_t GetIngestMode() const;
     ASAPO_VIRTUAL const std::string& GetProducerInstanceId() const;
     ASAPO_VIRTUAL void SetProducerInstanceId(std::string producer_instance_id);
     ASAPO_VIRTUAL const std::string& GetPipelineStepId() const;

@@ -40,6 +40,7 @@ enum AsapoConsumerErrorType {
     kWrongInput,
     kPartialData,
     kUnsupportedClient,
+    kDataNotInCache,
     kUnknownError
 };
 

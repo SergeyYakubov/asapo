@@ -676,6 +676,20 @@ TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfCannotReadFromCache) {
     ASSERT_THAT(info.buf_id, Eq(0));
 }
 
+TEST_F(ConsumerImplTests, GetMessageReturnsErrorIfCannotReadFromCache) {
+    MockGetBrokerUri();
+    auto to_send = CreateFI();
+    to_send.ingest_mode = asapo::kCacheOnlyIngestMode;
+    to_send.buf_id = 0;
+    auto json = to_send.Json();
+    MockGet(json);
+
+    MessageData data;
+
+    auto err = consumer->GetNext(expected_group_id, &info, &data, expected_stream);
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kDataNotInCache));
+}
+
 TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfZeroBufId) {
     MockGetBrokerUri();
     auto to_send = CreateFI(0);

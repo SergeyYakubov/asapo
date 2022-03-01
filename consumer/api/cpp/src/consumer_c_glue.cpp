@@ -79,7 +79,8 @@ extern "C" {
                   kLocalIOError == asapo::ConsumerErrorType::kLocalIOError&&
                   kWrongInput == asapo::ConsumerErrorType::kWrongInput&&
                   kPartialData == asapo::ConsumerErrorType::kPartialData&&
-                  kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient,
+                  kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient &&
+                  kDataNotInCache == asapo::ConsumerErrorType::kDataNotInCache,
                   "incompatible bit reps between c++ and c for asapo::ConsumerErrorType");
     static_assert(kAllStreams == asapo::StreamFilter::kAllStreams&&
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&

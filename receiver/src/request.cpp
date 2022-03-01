@@ -260,4 +260,8 @@ const std::string& Request::GetOriginHost() const {
     return origin_host_;
 }
 
+uint64_t Request::GetIngestMode() const {
+    return request_header_.custom_data[kPosIngestMode];
+}
+
 }

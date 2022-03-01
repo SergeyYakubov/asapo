@@ -50,6 +50,9 @@ class AsapoLocalIOError(AsapoConsumerError):
 class AsapoUnsupportedClientError(AsapoConsumerError):
   pass
 
+class AsapoDataNotInCacheError(AsapoConsumerError):
+  pass
+
 class AsapoStreamFinishedError(AsapoConsumerError):
   def __init__(self,message,id_max=None,next_stream=None):
     AsapoConsumerError.__init__(self,message)
@@ -105,6 +108,8 @@ cdef throw_exception(Error& err, res = None):
             raise AsapoInterruptedTransactionError(error_string)
     elif err == kUnsupportedClient:
             raise AsapoUnsupportedClientError(error_string)
+    elif err == kDataNotInCache:
+            raise AsapoDataNotInCacheError(error_string)
     else:
         raise AsapoConsumerError(error_string)
 

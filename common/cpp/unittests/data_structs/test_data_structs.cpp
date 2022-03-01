@@ -33,6 +33,7 @@ MessageMeta PrepareMessageMeta(bool includeNewStreamField = true) {
     message_meta.dataset_substream = 3;
     message_meta.name = std::string("folder") + asapo::kPathSeparator + "test";
     message_meta.source = "host:1234";
+    message_meta.ingest_mode = asapo::kDefaultIngestMode;
     message_meta.buf_id = big_uint;
     message_meta.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     message_meta.metadata =  "{\"bla\":10}";
@@ -56,10 +57,10 @@ TEST(MessageMetaTests, CorrectConvertToJson) {
     std::string json = message_meta.Json();
     if (asapo::kPathSeparator == '/') {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"ingest_mode":13,"meta":{"bla":10}})"));
     } else {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"ingest_mode":13,"meta":{"bla":10}})"));
     }
 }
 

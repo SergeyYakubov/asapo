@@ -43,6 +43,7 @@ class DbWriterHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
+    uint64_t expected_ingest_mode = asapo::kDefaultIngestMode;
     std::string expected_default_source = "detector";
     std::string expected_data_source = "source";
     std::string expected_host_ip = "127.0.0.1";
@@ -89,6 +90,7 @@ MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.dataset_substream != file.dataset_substream) return false;
     if (arg.name != file.name) return false;
     if (arg.stream != file.stream) return false;
+    if (arg.ingest_mode != file.ingest_mode) return false;
     if (arg.id != file.id) return false;
     if (arg.metadata != file.metadata) return false;
 
@@ -114,6 +116,9 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillRepeatedly(ReturnRef(data_source))
     ;
 
+    EXPECT_CALL(*mock_request, GetIngestMode())
+        .WillRepeatedly(Return(expected_ingest_mode))
+        ;
 
     EXPECT_CALL(*mock_request, GetSlotId())
     .WillOnce(Return(expected_buf_id))
@@ -136,7 +141,6 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     EXPECT_CALL(*mock_request, GetStream())
     .WillRepeatedly(Return(expected_stream))
     ;
-
 
     EXPECT_CALL(*mock_request, GetMetaData())
     .WillOnce(ReturnRef(expected_metadata))
@@ -165,6 +169,7 @@ MessageMeta DbWriterHandlerTests::PrepareMessageMeta(bool substream) {
     message_meta.size = expected_file_size;
     message_meta.name = expected_file_name;
     message_meta.id = expected_id;
+    message_meta.ingest_mode = expected_ingest_mode;
     if (substream) {
         message_meta.dataset_substream = expected_substream;
     }

@@ -131,6 +131,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode
+    uint64_t kCacheOnlyIngestMode
     enum IngestModeFlags:
         kTransferData
         kTransferMetaDataOnly
