@@ -1,0 +1,148 @@
+---
+title: Simple Producer
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+This example produces a simple message. This page provides snippets for simple producer for both Python and C++. You can go to BitBucket to see the whole example at once. The files there is a working example ready for launch.
+
+First step is to create an instance of the producer.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/produce.py" snippetTag="create"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/produce.cpp" snippetTag="create"
+```
+
+</TabItem>
+</Tabs>
+
+Then, we need to define a callback that would be used for sending. The callback is called when the message is actually sent, which may happen with a delay.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/produce.py" snippetTag="callback"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/produce.cpp" snippetTag="callback"
+```
+
+</TabItem>
+</Tabs>
+
+Next we schedule the actual sending. This function call does not perform the actual sending, only schedules it. The sending will happen in background, and when it is done the callbeack will be called (if provided).
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/produce.py" snippetTag="send"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/produce.cpp" snippetTag="send"
+```
+
+</TabItem>
+</Tabs>
+
+The sending of the messages will probably be done in a loop. After all the data is sent, some additional actions might be done. You may want to wait for all the background requests to be finished before doing something else or exiting the application.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/produce.py" snippetTag="finish"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/produce.cpp" snippetTag="finish"
+```
+
+</TabItem>
+</Tabs>
+
+You can get the full example from BitBucket and test it locally.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+For Python example just launch it with python interpreter (be sure that the ASAP::O client python modules are installed).
+
+```bash
+$ python3 produce.py
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+For C++ example you need to compiled it first. The easiest way to do it is by installing ASAP::O client dev packages and using the CMake find_package function. CMake will generate the makefile that you can then use to compile the example.
+
+The example CMake file can look like this.
+
+```cmake content="./versioned_examples/version-22.03.0/cpp/CMakeLists.txt" snippetTag="#producer"
+```
+
+You can use it like this.
+
+```bash
+$ cmake . && make
+$ ./asapo-produce
+```
+
+</TabItem>
+</Tabs>
+
+You should see the "successfuly sent" message in the logs, and the file should appear in the corresponding folder (by default in ```/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test```).

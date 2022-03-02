@@ -1,0 +1,142 @@
+---
+title: Message query
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Messages in streams can be retrieved based on their metadata. Both the technical information (e.g. ID or timestamp) and the user metadata (see [this tutorial](metadata) for details) can be used to make a query. In this tutorial several examples of the queries are shown. The standard SQL sysntaxis is used.
+
+For this example we expect several messages in the default stream with the metadata consisting of two fields: a string named ```condition``` and an integer named ```somevalue```. Go to the git repository for the full example.
+
+:::info
+Keep in mind, that the query requests return only the list of metadatas for the found messages, not the messages itself. You need to explicitly retrieve the actual data for each message.
+:::
+
+Here we can pick a message with the specific ID.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/query.py" snippetTag="by_id"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/query.cpp" snippetTag="by_id"
+```
+
+</TabItem>
+</Tabs>
+
+We can also use the simple rule for picking a range of IDs
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/query.py" snippetTag="by_ids"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/query.cpp" snippetTag="by_ids"
+```
+
+</TabItem>
+</Tabs>
+
+We can query the messages based on their metadata, for example request a specific value of the string field.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/query.py" snippetTag="string_equal"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/query.cpp" snippetTag="string_equal"
+```
+
+</TabItem>
+</Tabs>
+
+We can also require some more complex constraints on the metadata, e.g. a range for an integer field
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/query.py" snippetTag="int_compare"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/query.cpp" snippetTag="int_compare"
+```
+
+</TabItem>
+</Tabs>
+
+Since every message comes with a timestamp, we can make constraints on it as well. For example, request all the messages from the last 15 minutes.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-22.03.0/python/query.py" snippetTag="timestamp"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-22.03.0/cpp/query.cpp" snippetTag="timestamp"
+```
+
+</TabItem>
+</Tabs>
+
+The output of the full example will show the message selection together with the conditions used for selection.
