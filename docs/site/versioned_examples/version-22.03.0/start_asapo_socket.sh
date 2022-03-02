@@ -32,7 +32,7 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -e TF_VAR_mongo_dir=$MONGO_DIR \
   -e TF_VAR_asapo_user=$ASAPO_USER \
   -e ACL_ENABLED=true \
-  --name asapo --net=host -d yakser/asapo-cluster-dev:100.0.develop
+  --name asapo --net=host -d yakser/asapo-cluster:22.03.0
 
 sleep 15
 docker exec asapo jobs-start

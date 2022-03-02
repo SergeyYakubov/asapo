@@ -44,4 +44,4 @@ docker run --privileged --userns=host --security-opt no-new-privileges --rm \
   --name asapo --net=host -d yakser/asapo-cluster-dev:100.0.develop
 
 sleep 15
-docker exec asapo jobs-start -var elk_logs=false
+docker exec asapo jobs-start

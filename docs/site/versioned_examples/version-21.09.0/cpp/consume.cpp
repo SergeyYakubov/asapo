@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
         beamtime,                      // the folder should exist
         "",                            // can be empty or "auto", if beamtime_id is given
         "test_source",                 // source
-        token                          // athorization token
+        token                          // authorization token
     };
 
     auto consumer = asapo::ConsumerFactory::CreateConsumer

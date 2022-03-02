@@ -1,0 +1,93 @@
+{
+  "version-22.03.0/docs": [
+    {
+      "type": "doc",
+      "id": "version-22.03.0/getting-started"
+    },
+    {
+      "type": "doc",
+      "id": "version-22.03.0/overview"
+    },
+    {
+      "type": "doc",
+      "id": "version-22.03.0/compare-to-others"
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Concepts And Architecture",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-22.03.0/data-in-asapo"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/producer-clients"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/consumer-clients"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/core-architecture"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Use Cases",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-22.03.0/p02.1"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Code Examples",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/overview"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/simple-producer"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/simple-consumer"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/simple-pipeline"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/datasets"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/acknowledgements"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/metadata"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/next_stream"
+        },
+        {
+          "type": "doc",
+          "id": "version-22.03.0/cookbook/query"
+        }
+      ]
+    }
+  ]
+}
