@@ -295,7 +295,7 @@
           "tags": []
         },
         {
-          "alias": "Network share",
+          "alias": "Network share incoming",
           "groupBy": [
             {
               "params": [
@@ -325,7 +325,50 @@
             [
               {
                 "params": [
-                  "network_share"
+                  "network_incoming_share"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Network share outgoing",
+          "groupBy": [
+            {
+              "params": [
+                "10s"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "connection_from"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "statistics",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "network_incoming_share"
                 ],
                 "type": "field"
               },
@@ -479,7 +522,7 @@
           "tags": []
         },
         {
-          "alias": "Network share",
+          "alias": "Network share incoming",
           "groupBy": [
             {
               "params": [
@@ -503,7 +546,44 @@
             [
               {
                 "params": [
-                  "network_share"
+                  "network_incoming_share"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Network share outgoing",
+          "groupBy": [
+            {
+              "params": [
+                "10s"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "statistics",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "network_outgoing_share"
                 ],
                 "type": "field"
               },

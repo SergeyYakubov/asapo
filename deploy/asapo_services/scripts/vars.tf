@@ -1,3 +1,5 @@
+variable "asapo_docker_repository" {}
+
 variable "elk_logs" {}
 
 variable "perf_monitor" {}
@@ -58,6 +60,10 @@ variable "receiver_network_modes" {}
 
 variable "receiver_expose_metrics" {}
 
+variable "receiver_kafka_enabled" {}
+
+variable "receiver_kafka_metadata_broker_list" {}
+
 variable "grafana_total_memory_size" {}
 
 variable "influxdb_total_memory_size" {}
@@ -78,6 +84,11 @@ variable "prometheus_total_memory_size" {}
 
 variable "alertmanager_total_memory_size" {}
 
+variable "monitoring_server_total_memory_size" {}
+
+variable "monitoring_proxy_total_memory_size" {}
+
+variable "monitoring_ui_total_memory_size" {}
 
 variable "grafana_port" {}
 
@@ -104,6 +115,10 @@ variable "discovery_port" {}
 variable "authorizer_port" {}
 
 variable "consul_dns_port" {}
+
+variable "monitoring_proxy_port" {}
+
+variable "monitoring_ui_port" {}
 
 variable "n_receivers" {}
 

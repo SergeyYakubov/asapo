@@ -78,7 +78,9 @@ MessageMeta RequestHandlerDbWrite::PrepareMessageMeta(const Request* request) co
     message_meta.name = request->GetFileName();
     message_meta.size = request->GetDataSize();
     message_meta.id = request->GetDataID();
+    message_meta.ingest_mode = request->GetIngestMode();
     message_meta.buf_id = request->GetSlotId();
+    message_meta.stream = request->GetStream();
     message_meta.source = GetReceiverConfig()->dataserver.advertise_uri;
     message_meta.metadata = request->GetMetaData();
     message_meta.timestamp = std::chrono::system_clock::now();

@@ -8,6 +8,9 @@ add_subdirectory(src/data_structs)
 
 add_subdirectory(src/version)
 
+if (NOT BUILD_CLIENTS_ONLY)
+    add_subdirectory(src/kafka_client)
+endif()
 
 add_subdirectory(src/http_client)
 

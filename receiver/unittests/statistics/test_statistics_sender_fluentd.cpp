@@ -37,9 +37,10 @@ class SenderFluentdTests : public Test {
         statistics.n_requests = 4;
 
         statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kDatabase], 0.1});
-        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kNetwork], 0.3});
+        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kNetworkIncoming], 0.3});
+        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kNetworkOutgoing], 0.9});
         statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kDisk], 0.6});
-
+        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kMonitoring], 0.2});
 
         statistics.elapsed_ms = 100;
         statistics.data_volume = 1000;
@@ -62,7 +63,7 @@ class SenderFluentdTests : public Test {
 TEST_F(SenderFluentdTests, SendStatisticsCallsPost) {
     std::string expect_string =
         R"("@target_type_key":"stat","name1":"value1","name2":"value2","elapsed_ms":100,"data_volume":1000)"
-        R"(,"n_requests":4,"db_share":0.1000,"network_share":0.3000,"disk_share":0.6000)";
+        R"(,"n_requests":4,"db_share":0.1000,"network_incoming_share":0.3000,"network_outgoing_share":0.9000,"disk_share":0.6000,"monitoring":0.2000)";
     EXPECT_CALL(mock_logger, Info(HasSubstr(expect_string)));
 
 

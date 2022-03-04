@@ -9,6 +9,8 @@
 using testing::_;
 using testing::Return;
 using testing::SetArgPointee;
+using ::testing::Test;
+using ::testing::Eq;
 
 namespace asapo {
 
@@ -17,33 +19,33 @@ std::string Key(std::string value, std::string error_field) {
     return "\"" + val + "\":";
 }
 
-Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) {
+Error SetReceiverConfigWithError (const ReceiverConfig& config, std::string error_field) {
     MockIO mock_io;
     ReceiverConfigManager config_manager;
     config_manager.io__ = std::unique_ptr<IO> {&mock_io};
 
     std::string log_level;
     switch (config.log_level) {
-    case LogLevel::Error:
-        log_level = "error";
-        break;
-    case LogLevel::Warning:
-        log_level = "warning";
-        break;
-    case LogLevel::Info:
-        log_level = "info";
-        break;
-    case LogLevel::Debug:
-        log_level = "debug";
-        break;
-    case LogLevel::None:
-        log_level = "none";
-        break;
+        case LogLevel::Error:
+            log_level = "error";
+            break;
+            case LogLevel::Warning:
+                log_level = "warning";
+                break;
+                case LogLevel::Info:
+                    log_level = "info";
+                    break;
+                    case LogLevel::Debug:
+                        log_level = "debug";
+                        break;
+                        case LogLevel::None:
+                            log_level = "none";
+                            break;
     }
 
-    auto config_string = std::string("{") + Key("PerformanceDbServer",
-                                                error_field) + "\"" + config.performance_db_uri + "\"";
+    auto config_string = std::string("{") + Key("PerformanceDbServer", error_field) + "\"" + config.performance_db_uri + "\"";
     config_string += "," + Key("PerformanceDbName", error_field) + "\"" + config.performance_db_name + "\"";
+    config_string += "," + Key("MonitoringServer", error_field) + "\"" + config.monitoring_server_url + "\"";
     config_string += "," + Key("MonitorPerformance", error_field) + (config.monitor_performance ? "true" : "false");
     config_string += "," + Key("DatabaseServer", error_field) + "\"" + config.database_uri + "\"";
     config_string += "," + Key("DiscoveryServer", error_field) + "\"" + config.discovery_server + "\"";
@@ -80,18 +82,25 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," +  Key("AuthorizationServer", error_field) + "\"" + config.authorization_server + "\"";
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
+    config_string += "," +  Key("Kafka", error_field) + "{";
+    config_string += Key("Enabled", error_field) + (config.kafka_config.enabled ? "true" : "false") ;
+    config_string += "}";
     config_string += "}";
 
 
     EXPECT_CALL(mock_io, ReadFileToString_t("fname", _)).WillOnce(
-        testing::Return(config_string)
-    );
+            testing::Return(config_string)
+            );
 
     auto err = config_manager.ReadConfigFromFile("fname");
 
     config_manager.io__.release();
 
     return err;
+}
+
+void SetReceiverConfig (const ReceiverConfig& config, std::string error_field) {
+    SetReceiverConfigWithError(config, error_field);
 }
 
 }

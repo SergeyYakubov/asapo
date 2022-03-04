@@ -171,11 +171,14 @@ extern "C" {
 //! wraps asapo::SourceCredentials::SourceCredentials()
 /// \copydoc asapo::SourceCredentials::SourceCredentials()
     AsapoSourceCredentialsHandle asapo_create_source_credentials(enum AsapoSourceType type,
+            const char* instanceId,
+            const char* pipelineStep,
             const char* beamtime,
             const char* beamline,
             const char* data_source,
             const char* token) {
         auto retval = new asapo::SourceCredentials(static_cast<asapo::SourceType>(type),
+                                                   instanceId, pipelineStep,
                                                    beamtime, beamline,
                                                    data_source, token);
         return new AsapoHandlerHolder<asapo::SourceCredentials> {retval};

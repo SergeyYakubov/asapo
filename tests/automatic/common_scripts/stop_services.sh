@@ -5,3 +5,4 @@ nomad stop -purge broker
 nomad stop -purge receiver
 nomad stop -purge authorizer
 nomad stop -purge file_transfer
+nomad stop -purge monitoring

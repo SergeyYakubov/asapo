@@ -17,6 +17,10 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     std::string log_level;
     Error err;
 
+    std::vector<std::string> kafkaTopics;
+
+    // New monitoring
+    (err = parser.GetString("MonitoringServer", &config.monitoring_server_url)) ||
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
     (err = parser.GetBool("MonitorPerformance", &config.monitor_performance)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
@@ -36,10 +40,27 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     (err = parser.Embedded("DataServer").GetArrayString("NetworkMode", &config.dataserver.network_mode)) ||
     (err = parser.Embedded("Metrics").GetBool("Expose", &config.metrics.expose)) ||
     (err = parser.Embedded("Metrics").GetUInt64("ListenPort", &config.metrics.listen_port)) ||
-    (err = parser.GetString("LogLevel", &log_level));
+    (err = parser.GetString("LogLevel", &log_level)) ||
+    (err = parser.Embedded("Kafka").GetBool("Enabled", &config.kafka_config.enabled));
 
     if (err) {
         return err;
+    }
+
+    if (config.kafka_config.enabled) {
+        (err = parser.Embedded("Kafka").GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
+        (err = parser.Embedded("Kafka").GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
+        if (err) {
+            return err;
+        }
+
+        for(const auto& topic : kafkaTopics) {
+            auto topicConfig = config.kafka_config.topics_config[topic];
+            err = parser.Embedded("Kafka").Embedded("KafkaTopics").GetDictionaryString(topic, &topicConfig);
+            if (err) {
+                return err;
+            }
+        }
     }
 
     config.dataserver.tag = config.tag + "_ds";

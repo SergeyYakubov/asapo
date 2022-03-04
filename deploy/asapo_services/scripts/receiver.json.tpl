@@ -1,6 +1,7 @@
 {
-  "PerformanceDbServer":"localhost:8400/influxdb",
   "MonitorPerformance": {{ env "NOMAD_META_perf_monitor" }},
+  "MonitoringServer": "auto",
+  "PerformanceDbServer":"localhost:8400/influxdb",
   "PerformanceDbName": "asapo_receivers",
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/asapo-discovery",
@@ -24,5 +25,14 @@
   },
   "Tag": "{{ env "attr.unique.hostname" }}",
   "ReceiveToDiskThresholdMB": {{ env "NOMAD_META_receiver_receive_to_disk_threshold" }},
-  "LogLevel": "{{ keyOrDefault "receiver_log_level" "info" }}"
+  "LogLevel": "{{ keyOrDefault "receiver_log_level" "info" }}",
+  "Kafka": {
+    "Enabled": {{ env "NOMAD_META_receiver_kafka_enabled" }},
+    "KafkaClient": {
+      "metadata.broker.list": "{{ env "NOMAD_META_receiver_kafka_metadata_broker_list" }}"
+    },
+    "KafkaTopics": {
+      "asapo": {}
+    }
+  }
 }

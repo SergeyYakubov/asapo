@@ -53,7 +53,7 @@ class ConfigTests : public Test {
 TEST_F(ConfigTests, ReadSettings) {
     PrepareConfig();
 
-    auto err = asapo::SetReceiverConfig(test_config, "none");
+    auto err = asapo::SetReceiverConfigWithError(test_config, "none");
 
     auto config = GetReceiverConfig();
 
@@ -81,6 +81,8 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->receive_to_disk_threshold_mb, Eq(50));
     ASSERT_THAT(config->metrics.expose, Eq(true));
     ASSERT_THAT(config->metrics.listen_port, Eq(123));
+    ASSERT_THAT(config->kafka_config.enabled, Eq(false));
+
 }
 
 
@@ -92,9 +94,9 @@ TEST_F(ConfigTests, ErrorReadSettings) {
                                     "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
                                     "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode", "MonitorPerformance",
-                                    "ReceiveToDiskThresholdMB", "Metrics", "Expose"};
+                                    "ReceiveToDiskThresholdMB", "Metrics", "Expose","Enabled"};
     for (const auto& field : fields) {
-        auto err = asapo::SetReceiverConfig(test_config, field);
+        auto err = asapo::SetReceiverConfigWithError(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));
     }
 }

@@ -9,7 +9,7 @@
 
 namespace asapo {
 
-class RequestHandlerDbCheckRequest FINAL : public RequestHandlerDb {
+class RequestHandlerDbCheckRequest ASAPO_FINAL : public RequestHandlerDb {
   public:
     RequestHandlerDbCheckRequest(std::string collection_name_prefix);
     Error ProcessRequest(Request* request) const override;

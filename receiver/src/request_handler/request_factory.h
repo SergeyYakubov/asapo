@@ -8,6 +8,8 @@
 #include "request_handler_db_last_stream.h"
 #include "request_handler_db_delete_stream.h"
 #include "request_handler_db_get_meta.h"
+#include "request_handler_monitoring.h"
+#include "request_handler_kafka_notify.h"
 
 #include "request_handler_file_process.h"
 #include "request_handler_db_write.h"
@@ -23,13 +25,19 @@ namespace asapo {
 
 class RequestFactory {
   public:
-    explicit RequestFactory (SharedCache cache);
+    explicit RequestFactory (SharedReceiverMonitoringClient monitoring, SharedCache cache, KafkaClient* kafka_client);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
-                                                     SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
+                                                     SocketDescriptor socket_fd, std::string origin_uri,
+                                                     RequestStatisticsPtr statistics, Error* err) const noexcept;
     virtual ~RequestFactory() = default;
   private:
     Error AddHandlersToRequest(std::unique_ptr<Request>& request,  const GenericRequestHeader& request_header) const;
     Error AddReceiveWriteHandlers(std::unique_ptr<Request>& request, const GenericRequestHeader& request_header) const;
+
+    SharedReceiverMonitoringClient monitoring_;
+    AuthorizationData shared_auth_cache_;
+    SharedCache cache_;
+
     WriteFileProcessor write_file_processor_;
     ReceiveFileProcessor receive_file_processor_;
     RequestHandlerFileProcess request_handler_filewrite_{&write_file_processor_};
@@ -37,6 +45,7 @@ class RequestFactory {
     RequestHandlerReceiveData request_handler_receivedata_;
     RequestHandlerReceiveMetaData request_handler_receive_metadata_;
     RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionNamePrefix};
+    RequestHandlerMonitoring request_handler_monitoring_;
     RequestHandlerDbStreamInfo request_handler_db_stream_info_{kDBDataCollectionNamePrefix};
     RequestHandlerDbDeleteStream request_handler_delete_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbLastStream request_handler_db_last_stream_{kDBDataCollectionNamePrefix};
@@ -45,8 +54,8 @@ class RequestFactory {
     RequestHandlerInitialAuthorization request_handler_initial_authorize_{&shared_auth_cache_};
     RequestHandlerSecondaryAuthorization request_handler_secondary_authorize_{&shared_auth_cache_};
     RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};
-    SharedCache cache_;
-    AuthorizationData shared_auth_cache_;
+
+    RequestHandlerKafkaNotify request_handler_kafka_notify_;
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
     Error AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,
                                         const GenericRequestHeader& request_header) const;

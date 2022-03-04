@@ -8,6 +8,10 @@ type ReceiverInfo struct {
 	UseIBAddress bool
 }
 
+type MonitoringInfo struct {
+	StaticEndpoint		 string
+}
+
 type BrokerInfo struct {
 	StaticEndpoint		 string
 }
@@ -23,6 +27,7 @@ type FtsInfo struct {
 type Settings struct {
 	Receiver 		ReceiverInfo
 	Broker 		    BrokerInfo
+	Monitoring		MonitoringInfo
 	Mongo 			MongoInfo
 	FileTransferService  FtsInfo
 	ConsulEndpoints []string

@@ -12,7 +12,10 @@ namespace asapo {
 class ProducerRequest : public GenericRequest {
   public:
     ~ProducerRequest();
-    ProducerRequest(std::string source_credentials, GenericRequestHeader header, MessageData data,
+    ProducerRequest(
+                    std::string source_credentials,
+                    GenericRequestHeader header,
+                    MessageData data,
                     std::string metadata,
                     std::string original_filepath,
                     RequestCallback callback,

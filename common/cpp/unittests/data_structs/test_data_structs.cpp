@@ -26,16 +26,20 @@ namespace {
 
 uint64_t big_uint = 18446744073709551615ull;
 
-MessageMeta PrepareMessageMeta() {
+MessageMeta PrepareMessageMeta(bool includeNewStreamField = true) {
     MessageMeta message_meta;
     message_meta.size = 100;
     message_meta.id = 1;
     message_meta.dataset_substream = 3;
     message_meta.name = std::string("folder") + asapo::kPathSeparator + "test";
     message_meta.source = "host:1234";
+    message_meta.ingest_mode = asapo::kDefaultIngestMode;
     message_meta.buf_id = big_uint;
     message_meta.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     message_meta.metadata =  "{\"bla\":10}";
+    if (includeNewStreamField) {
+        message_meta.stream = "testStream";
+    }
     return message_meta;
 }
 
@@ -53,10 +57,10 @@ TEST(MessageMetaTests, CorrectConvertToJson) {
     std::string json = message_meta.Json();
     if (asapo::kPathSeparator == '/') {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"ingest_mode":13,"meta":{"bla":10}})"));
     } else {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"ingest_mode":13,"meta":{"bla":10}})"));
     }
 }
 
@@ -105,11 +109,47 @@ TEST(MessageMetaTests, CorrectConvertFromJson) {
     ASSERT_THAT(result.timestamp, Eq(message_meta.timestamp));
     ASSERT_THAT(result.buf_id, Eq(message_meta.buf_id));
     ASSERT_THAT(result.source, Eq(message_meta.source));
+    ASSERT_THAT(result.stream, Eq(message_meta.stream)); // new
     ASSERT_THAT(result.metadata, Eq(message_meta.metadata));
     ASSERT_THAT(result.dataset_substream, Eq(message_meta.dataset_substream));
 
 }
 
+void eraseSubStr(std::string & mainStr, const std::string & toErase)
+{
+    // Search for the substring in string
+    size_t pos = mainStr.find(toErase);
+    if (pos != std::string::npos)
+    {
+        // If found then erase it from string
+        mainStr.erase(pos, toErase.length());
+    }
+}
+
+TEST(MessageMetaTests, CorrectConvertFromJson_AllowOldDataFormat_MissingSource) {
+    // The source field was added in the monitoring update and might be missing on older datasets
+
+    auto message_meta = PrepareMessageMeta(false);
+    std::string json = message_meta.Json();
+
+    eraseSubStr(json, ",\"stream\":\"\"");
+
+    MessageMeta result;
+    auto ok = result.SetFromJson(json);
+
+    ASSERT_THAT(ok, Eq(true));
+
+    ASSERT_THAT(result.id, Eq(message_meta.id));
+    ASSERT_THAT(result.name, Eq(message_meta.name));
+    ASSERT_THAT(result.size, Eq(message_meta.size));
+    ASSERT_THAT(result.timestamp, Eq(message_meta.timestamp));
+    ASSERT_THAT(result.buf_id, Eq(message_meta.buf_id));
+    ASSERT_THAT(result.source, Eq(message_meta.source));
+    ASSERT_THAT(result.stream, Eq("unknownStream")); // new and might be missing in some cases
+    ASSERT_THAT(result.metadata, Eq(message_meta.metadata));
+    ASSERT_THAT(result.dataset_substream, Eq(message_meta.dataset_substream));
+
+}
 
 TEST(MessageMetaTests, CorrectConvertFromJsonEmptyMeta) {
     auto message_meta = PrepareMessageMeta();
@@ -193,11 +233,10 @@ TEST(StreamInfo, ConvertToJson) {
     ASSERT_THAT(json, Eq(expected_json));
 }
 
-
 TEST(SourceCredentials, ConvertToString) {
-    auto sc = SourceCredentials{SourceType::kRaw, "beamtime", "beamline", "source", "token"};
-    std::string expected1 = "raw%beamtime%beamline%source%token";
-    std::string expected2 = "processed%beamtime%beamline%source%token";
+    auto sc = SourceCredentials{SourceType::kRaw, "instance", "step", "beamtime", "beamline", "source", "token"};
+    std::string expected1 = "raw%instance%step%beamtime%beamline%source%token";
+    std::string expected2 = "processed%instance%step%beamtime%beamline%source%token";
 
     auto res1 = sc.GetString();
     sc.type = asapo::SourceType::kProcessed;

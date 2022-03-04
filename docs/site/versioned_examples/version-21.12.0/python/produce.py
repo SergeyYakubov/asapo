@@ -23,7 +23,7 @@ producer = asapo_producer \
                                  beamtime,       # the folder should exist
                                  'auto',         # can be 'auto', if beamtime_id is given
                                  'test_source',  # source
-                                 '',             # athorization token
+                                 '',             # authorization token
                                  1,              # number of threads. Increase, if the sending speed seems slow
                                  60000)          # timeout. Do not change.
 

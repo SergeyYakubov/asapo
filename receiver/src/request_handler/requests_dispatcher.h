@@ -14,10 +14,10 @@ namespace asapo {
 
 class RequestsDispatcher {
   public:
-    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, ReceiverStatistics* statistics, SharedCache cache);
-    VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
-    VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
-    VIRTUAL ~RequestsDispatcher() = default;
+    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, ReceiverStatistics* statistics,SharedReceiverMonitoringClient monitoring, SharedCache cache, KafkaClient* kafka_client);
+    ASAPO_VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
+    ASAPO_VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
+    ASAPO_VIRTUAL ~RequestsDispatcher() = default;
     ReceiverStatistics* statistics__;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;

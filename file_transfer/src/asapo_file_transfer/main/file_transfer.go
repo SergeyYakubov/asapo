@@ -35,5 +35,7 @@ func main() {
 
 	log.SetLevel(logLevel)
 
+	server.CreateDiscoveryService()
+
 	server.Start()
 }

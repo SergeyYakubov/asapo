@@ -7,12 +7,14 @@
 
 #include "receiver_data_server/receiver_data_server_config.h"
 #include "metrics/receiver_metrics_config.h"
+#include "asapo/kafka_client/kafka_config.h"
 
 namespace asapo {
 
 struct ReceiverConfig {
     std::string performance_db_uri;
     std::string performance_db_name;
+    std::string monitoring_server_url;
     bool monitor_performance = false;
     std::string database_uri;
     uint64_t listen_port = 0;
@@ -27,6 +29,7 @@ struct ReceiverConfig {
     ReceiverDataServerConfig dataserver;
     ReceiverMetricsConfig metrics;
     std::string discovery_server;
+    KafkaClientConfig kafka_config;
 };
 
 class ReceiverConfigManager {

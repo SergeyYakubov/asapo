@@ -13,4 +13,5 @@ require (
 	github.com/rs/xid v1.2.1
 	github.com/stretchr/testify v1.7.0
 	go.mongodb.org/mongo-driver v1.5.3
+	google.golang.org/grpc v1.39.0
 )

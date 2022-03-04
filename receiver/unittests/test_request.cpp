@@ -31,7 +31,7 @@ class MockReqestHandler : public asapo::ReceiverRequestHandler {
 TEST(RequestTest, Constructor) {
     std::unique_ptr<Request> request;
     GenericRequestHeader generic_request_header;
-    request.reset(new Request{generic_request_header, 1, "", nullptr, nullptr});
+    request.reset(new Request{generic_request_header, 1, "", nullptr, nullptr, nullptr});
     ASSERT_THAT(request->WasAlreadyProcessed(), false);
 }
 
@@ -51,12 +51,10 @@ class RequestTests : public Test {
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
     std::string expected_api_version = "v0.2";
     std::unique_ptr<Request> request;
-    NiceMock<MockIO> mock_io;
-    NiceMock<MockStatistics> mock_statistics;
-    asapo::ReceiverStatistics*  stat;
+    StrictMock<MockIO> mock_io;
+    StrictMock<asapo::MockInstancedStatistics>* mock_instanced_statistics;
     MockDataCache mock_cache;
     void SetUp() override {
-        stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.meta_size = expected_metadata_size;
@@ -64,13 +62,16 @@ class RequestTests : public Test {
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
         strcpy(generic_request_header.api_version, expected_api_version.c_str());
-        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
+        mock_instanced_statistics = new StrictMock<asapo::MockInstancedStatistics>;
+        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr,
+                                  std::unique_ptr<asapo::MockInstancedStatistics> {mock_instanced_statistics}});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
                   Return(0)
                  ));
     }
+    void MockAllocateRequestSlot();
     void TearDown() override {
         request->io__.release();
     }
@@ -78,8 +79,19 @@ class RequestTests : public Test {
 };
 
 
-TEST_F(RequestTests, HandleProcessesRequests) {
+void RequestTests::MockAllocateRequestSlot()
+{
+    request->cache__ = &mock_cache;
+    asapo::CacheMeta meta;
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, _,_,_,_)).WillOnce(
+        DoAll(SetArgPointee<1>(&meta),
+              SetArgPointee<5>(nullptr),
+              Return(&mock_cache)
+        ));
+    request->PrepareDataBufferAndLockIfNeeded();
+}
 
+TEST_F(RequestTests, HandleProcessesRequests) {
     MockReqestHandler mock_request_handler;
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
@@ -88,15 +100,16 @@ TEST_F(RequestTests, HandleProcessesRequests) {
         Return(new asapo::IOError("Test Send Error", "", asapo::IOErrorType::kUnknownIOError))
     );
 
+    MockAllocateRequestSlot();
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
 
-    EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kDisk)).Times(2);
+    EXPECT_CALL(*mock_instanced_statistics, StartTimer(asapo::StatisticEntity::kDisk)).Times(2);
 
-    EXPECT_CALL(mock_statistics, StopTimer_t()).Times(1);
+    EXPECT_CALL(*mock_instanced_statistics, StopTimer()).Times(2);
+    EXPECT_CALL(mock_cache, UnlockSlot(_));
 
-
-    auto err = request->Handle(stat);
+    auto err = request->Handle();
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -149,7 +162,7 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     strcpy(generic_request_header.message, sended.c_str());
 
     request->io__.release();
-    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
+    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
 
     auto fname = request->GetFileName();
@@ -163,7 +176,7 @@ TEST_F(RequestTests, GetStream) {
     strcpy(generic_request_header.stream, expected_stream.c_str());
 
     request->io__.release();
-    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
+    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
 
     auto stream = request->GetStream();

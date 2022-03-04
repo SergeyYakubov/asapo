@@ -1,53 +1,78 @@
 #include "request.h"
+
+#include <utility>
 #include "asapo/io/io_factory.h"
 #include "request_handler/request_handler_db_check_request.h"
+#include "receiver_logger.h"
 
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
                  SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache,
-                 const RequestHandlerDbCheckRequest* db_check_handler) : io__{GenerateDefaultIO()},
-    cache__{cache}, request_header_(header),
-    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
-    check_duplicate_request_handler_{db_check_handler} {
+                 const RequestHandlerDbCheckRequest* db_check_handler,
+                 RequestStatisticsPtr statistics) : io__{GenerateDefaultIO()},
+                                                    cache__{cache}, log__{GetDefaultReceiverLogger()}, statistics_{std::move(statistics)}, request_header_(header),
+                                                    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
+                                                    check_duplicate_request_handler_{db_check_handler} {
     origin_host_ = HostFromUri(origin_uri_);
 }
 
-Error Request::PrepareDataBufferAndLockIfNeeded() {
-    if (cache__ == nullptr) {
-        try {
-            data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
-        } catch(std::exception& e) {
-            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(
-                std::string("cannot allocate memory for request"));
-            err->AddDetails("reason", e.what())->AddDetails("size", std::to_string(request_header_.data_size));
-            return err;
-        }
+Error Request::PrepareDataBufferFromMemory() {
+    try {
+        data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
+    } catch(std::exception& e) {
+        auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(
+            std::string("cannot allocate memory for request"));
+        err->AddDetails("reason", e.what())->AddDetails("size", std::to_string(request_header_.data_size));
+        return err;
+    }
+    return nullptr;
+}
+
+Error Request::PrepareDataBufferFromCache() {
+    Error err;
+    CacheMeta* slot;
+    data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot, GetBeamtimeId(), GetDataSource(), GetStream(), &err);
+    if (err == nullptr) {
+        slot_meta_ = slot;
     } else {
-        CacheMeta* slot;
-        data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot);
-        if (data_ptr) {
-            slot_meta_ = slot;
-        } else {
-            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
-            err->AddDetails("size", std::to_string(request_header_.data_size));
-            return err;
-        }
+        err->AddDetails("size", std::to_string(request_header_.data_size));
+        return err;
     }
     return nullptr;
 }
 
 
-Error Request::Handle(ReceiverStatistics* statistics) {
-    for (auto handler : handlers_) {
-        statistics->StartTimer(handler->GetStatisticEntity());
-        auto err = handler->ProcessRequest(this);
-        if (err) {
-            return err;
-        }
-        statistics->StopTimer();
+Error Request::PrepareDataBufferAndLockIfNeeded() {
+    if (cache__ == nullptr) {
+        return PrepareDataBufferFromMemory();
+    }
+    auto err = PrepareDataBufferFromCache();
+    if (err) {
+        log__->Warning(LogMessageWithFields(err).Append(RequestLog("", this)));
+        cache__ = nullptr;
+        return PrepareDataBufferFromMemory();
     }
     return nullptr;
+}
+
+
+Error Request::Handle() {
+    Error err;
+    for (auto handler : handlers_) {
+        if (statistics_) {
+            statistics_->StartTimer(handler->GetStatisticEntity());
+        }
+        err = handler->ProcessRequest(this);
+        if (statistics_) {
+            statistics_->StopTimer();
+        }
+        if (err) {
+            break;
+        }
+    }
+    UnlockDataBufferIfNeeded();
+    return err;
 }
 
 const RequestHandlerList& Request::GetListHandlers() const {
@@ -97,6 +122,20 @@ std::string Request::GetApiVersion() const {
     return request_header_.api_version;
 }
 
+const std::string& Request::GetProducerInstanceId() const {
+    return producer_instance_id_;
+}
+void Request::SetProducerInstanceId(std::string producer_instance_id) {
+    producer_instance_id_ = std::move(producer_instance_id);
+}
+
+const std::string& Request::GetPipelineStepId() const {
+    return pipeline_step_id_;
+}
+void Request::SetPipelineStepId(std::string pipeline_step_id) {
+    pipeline_step_id_ = std::move(pipeline_step_id);
+}
+
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;
 }
@@ -106,6 +145,7 @@ const std::string& Request::GetBeamtimeId() const {
 void Request::SetBeamtimeId(std::string beamtime_id) {
     beamtime_id_ = std::move(beamtime_id);
 }
+
 
 Opcode Request::GetOpCode() const {
     return request_header_.op_code;
@@ -208,8 +248,20 @@ SourceType Request::GetSourceType() const {
     return source_type_;
 }
 
+RequestStatistics* Request::GetStatistics() {
+    if (statistics_) {
+        return statistics_.get();
+    } else {
+        return nullptr;
+    }
+}
+
 const std::string& Request::GetOriginHost() const {
     return origin_host_;
+}
+
+uint64_t Request::GetIngestMode() const {
+    return request_header_.custom_data[kPosIngestMode];
 }
 
 }

@@ -79,7 +79,8 @@ extern "C" {
                   kLocalIOError == asapo::ConsumerErrorType::kLocalIOError&&
                   kWrongInput == asapo::ConsumerErrorType::kWrongInput&&
                   kPartialData == asapo::ConsumerErrorType::kPartialData&&
-                  kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient,
+                  kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient &&
+                  kDataNotInCache == asapo::ConsumerErrorType::kDataNotInCache,
                   "incompatible bit reps between c++ and c for asapo::ConsumerErrorType");
     static_assert(kAllStreams == asapo::StreamFilter::kAllStreams&&
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&
@@ -227,16 +228,25 @@ extern "C" {
                                     size_t index) {
         return list->handle->at(index);
     }
+
 //! wraps asapo::Consumer::ForceNoRdma()
 /// \copydoc asapo::Consumer::ForceNoRdma()
 /// \param[in] consumer the handle of the consumer concerned
     void asapo_consumer_force_no_rdma(AsapoConsumerHandle consumer);
+
 //! wraps asapo::Consumer::CurrentConnectionType()
 /// \copydoc asapo::Consumer::CurrentConnectionType()
 /// \param[in] consumer the handle of the consumer concerned
     enum AsapoNetworkConnectionType asapo_consumer_current_connection_type(AsapoConsumerHandle consumer) {
         return static_cast<AsapoNetworkConnectionType>(consumer->handle->CurrentConnectionType());
     }
+
+//! wraps asapo::Consumer::DisableMonitoring()
+/// \copydoc asapo::Consumer::DisableMonitoring()
+/// \param[in] consumer the handle of the consumer concerned
+/// \param[in] enabled set this to true if the new API format should be used
+/// \param[out] error will contain a pointer to an AsapoErrorHandle if a problem occured, NULL else.
+    int enable_new_monitoring_api_format(AsapoConsumerHandle consumer, AsapoBool enabled, AsapoErrorHandle* error);
 
 
 //! get list of streams, wraps asapo::Consumer::GetStreamList()
@@ -472,7 +482,6 @@ extern "C" {
                                 const char* stream,
                                 AsapoErrorHandle* error) {
         dataGetterStart
-
         auto err = consumer->handle->GetNext(*group_id->handle, fi, data ? &d : nullptr, stream);
         dataGetterStop
 
@@ -675,7 +684,4 @@ extern "C" {
     const char* asapo_consumer_error_get_next_stream(const AsapoConsumerErrorDataHandle error_payload) {
         return error_payload->handle->next_stream.c_str();
     }
-
-
-
 }

@@ -58,6 +58,12 @@ func routeGetReceivers(w http.ResponseWriter, r *http.Request) {
 	w.Write(answer)
 }
 
+func routeGetMonitoringServers(w http.ResponseWriter, r *http.Request) {
+	answer, code := getService(common.NameMonitoringServer)
+	w.WriteHeader(code)
+	w.Write(answer)
+}
+
 func routeGetBroker(w http.ResponseWriter, r *http.Request) {
 	if ok := checkDiscoveryApiVersion(w, r); !ok {
 		return

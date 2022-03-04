@@ -19,6 +19,7 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::HasSubstr;
 using ::testing::ElementsAre;
+using ::testing::Pair;
 using ::testing::DoAll;
 
 using asapo::JsonFileParser;
@@ -207,6 +208,54 @@ TEST(ParseString, StringArrayConvertToJson) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(vec, ElementsAre("s1", "s2", "s3"));
+}
+
+TEST(ParseString, ObjectMemberArrayConvertToJson) {
+    std::string json = R"({"object":{"k1":"v1","k2":"v2","k3":"v3"}})";
+
+    JsonStringParser parser{json};
+
+    std::vector<std::string> vec;
+    auto err = parser.GetArrayObjectMembers("object", &vec);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(vec, ElementsAre("k1", "k2", "k3"));
+}
+
+TEST(ParseString, DictionaryStringConvertToJson) {
+    std::string json = R"({"object":{"k1":"v1","k2":"v2","k3":"v3"}})";
+
+    JsonStringParser parser{json};
+
+    std::map<std::string, std::string> map;
+    auto err = parser.GetDictionaryString("object", &map);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(map, ElementsAre(Pair("k1", "v1"), Pair("k2", "v2"), Pair("k3", "v3")));
+}
+
+TEST(ParseString, RawStringConvertToJson) {
+    std::string json = R"({"object":{"k1":"v1","k2":"v2","k3":"v3"}})";
+
+    JsonStringParser parser{json};
+
+    std::string value;
+    auto err = parser.GetRawString(&value);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(json, Eq(value));
+}
+
+TEST(ParseString, ArrayRawStringConvertToJson) {
+    std::string json = R"({"array":[{"k1":"v1"},{"k2":"v2"},{"k3":"v3"}]})";
+
+    JsonStringParser parser{json};
+
+    std::vector<std::string> vec;
+    auto err = parser.GetArrayRawStrings("array", &vec);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(vec, ElementsAre(R"({"k1":"v1"})", R"({"k2":"v2"})", R"({"k3":"v3"})"));
 }
 
 class ParseFileTests : public Test {

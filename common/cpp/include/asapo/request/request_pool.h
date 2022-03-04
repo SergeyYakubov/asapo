@@ -27,13 +27,13 @@ class RequestPool {
     };
   public:
     explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, const AbstractLogger* log);
-    VIRTUAL Error AddRequest(GenericRequestPtr request, bool top_priority = false);
-    VIRTUAL void SetLimits(RequestPoolLimits limits);
-    VIRTUAL Error AddRequests(GenericRequests requests);
-    VIRTUAL ~RequestPool();
-    VIRTUAL uint64_t NRequestsInPool();
-    VIRTUAL uint64_t UsedMemoryInPool();
-    VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
+    ASAPO_VIRTUAL Error AddRequest(GenericRequestPtr request, bool top_priority = false);
+    ASAPO_VIRTUAL void SetLimits(RequestPoolLimits limits);
+    ASAPO_VIRTUAL Error AddRequests(GenericRequests requests);
+    ASAPO_VIRTUAL ~RequestPool();
+    ASAPO_VIRTUAL uint64_t NRequestsInPool();
+    ASAPO_VIRTUAL uint64_t UsedMemoryInPool();
+    ASAPO_VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
     void StopThreads();
   private:
     const AbstractLogger* log__;

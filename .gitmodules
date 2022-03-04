@@ -1,3 +1,9 @@
 [submodule "deploy/asapo-worker-node-template"]
 	path = deploy/asapo_worker_node_template
 	url = ssh://yakubov@stash.desy.de:7999/asapo/asapo-worker-node-template.git
+[submodule "deploy/deploy/asapo_worker_node_template"]
+	path = deploy/deploy/asapo_worker_node_template
+	url = ssh://git@stash.desy.de:7999/asapo/asapo-worker-node-template.git
+[submodule "deploy/asapo_worker_node_template"]
+	path = deploy/asapo_worker_node_template
+	url = ssh://git@stash.desy.de:7999/asapo/asapo-worker-node-template.git

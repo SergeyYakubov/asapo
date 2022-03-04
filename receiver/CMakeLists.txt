@@ -7,10 +7,13 @@ set(RECEIVER_CORE_FILES
         src/request.cpp
         src/receiver_config.cpp
         src/receiver_logger.cpp
+
         src/statistics/receiver_statistics.cpp
         src/statistics/statistics.cpp
         src/statistics/statistics_sender_influx_db.cpp
         src/statistics/statistics_sender_fluentd.cpp
+        src/statistics/instanced_statistics_provider.cpp
+
         src/request_handler/requests_dispatcher.cpp
         src/request_handler/request_handler_file_process.cpp
         src/request_handler/request_handler_db_write.cpp
@@ -26,8 +29,10 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_check_request.cpp
         src/request_handler/request_handler_db_delete_stream.cpp
         src/request_handler/request_handler_db_get_meta.cpp
+        src/request_handler/request_handler_kafka_notify.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
+        src/request_handler/request_handler_monitoring.cpp
         src/request_handler/file_processors/write_file_processor.cpp
         src/request_handler/file_processors/file_processor.cpp
         src/request_handler/file_processors/receive_file_processor.cpp
@@ -46,12 +51,75 @@ set(RDS_FILES
         src/receiver_data_server/request_handler/receiver_data_server_request_handler.cpp
         )
 
+################################
+# Protobuf
+################################
+
+set(MONITORING_FILES
+        src/monitoring/receiver_monitoring_client.cpp
+        src/monitoring/receiver_monitoring_client_noop.cpp
+        )
+
+if (ENABLE_NEW_RECEIVER_MONITORING)
+    add_definitions(-DNEW_RECEIVER_MONITORING_ENABLED)
+    include(../CMakeIncludes/grpc_common.cmake)
+
+    get_filename_component(proto_in_dir "../common/networking/monitoring" ABSOLUTE)
+    set(proto_file_common ${proto_in_dir}/AsapoMonitoringCommonService.proto)
+    set(proto_file_ingest ${proto_in_dir}/AsapoMonitoringIngestService.proto)
+
+    set(proto_out_dir ${CMAKE_CURRENT_BINARY_DIR})
+    set(proto_ingest_c "${proto_out_dir}/AsapoMonitoringIngestService.pb.cc")
+    set(proto_ingest_h "${proto_out_dir}/AsapoMonitoringIngestService.pb.h")
+    set(proto_common_c "${proto_out_dir}/AsapoMonitoringCommonService.pb.cc")
+    set(proto_common_h "${proto_out_dir}/AsapoMonitoringCommonService.pb.h")
+    set(grpc_c "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.cc")
+    set(grpc_h "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.h")
+
+    add_custom_command(
+            OUTPUT "${proto_ingest_c}" "${proto_ingest_h}" "${proto_common_c}" "${proto_common_h}" "${grpc_c}" "${grpc_h}"
+            COMMAND ${_PROTOBUF_PROTOC}
+            ARGS --grpc_out "${proto_out_dir}"
+            --cpp_out "${proto_out_dir}"
+            -I "${proto_in_dir}"
+            --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+            "${proto_file_common}" "${proto_file_ingest}"
+            DEPENDS "${proto_file_common}" "${proto_file_ingest}")
+
+    add_library(grpc_ingest_service_proto
+            ${proto_ingest_c}
+            ${proto_ingest_h}
+            ${proto_common_c}
+            ${proto_common_h}
+            ${grpc_c}
+            ${grpc_h})
+    IF(NOT WIN32)
+        target_compile_options(grpc_ingest_service_proto PUBLIC "-Wno-error")
+    ENDIF()
+    target_link_libraries(grpc_ingest_service_proto
+            ${_REFLECTION}
+            ${_GRPC_GRPCPP}
+            ${_PROTOBUF_LIBPROTOBUF})
+    find_package(gRPC CONFIG REQUIRED)
+
+    # Include generated *.pb.h files
+    include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}")
+
+    set(MONITORING_FILES
+            ${MONITORING_FILES}
+            src/monitoring/receiver_monitoring_client_impl.cpp
+            )
+endif()
+
+################################
+# Building
+################################
 
 set(SOURCE_FILES
         ${RECEIVER_CORE_FILES}
         ${RDS_FILES}
+        ${MONITORING_FILES}
         )
-
 
 ################################
 # Library
@@ -59,12 +127,15 @@ set(SOURCE_FILES
 GET_PROPERTY(ASAPO_COMMON_FABRIC_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES)
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
-        $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool>)
+        $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:rdkafka_client>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
-target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR})
-target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} database
+target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR} ${RDKAFKA_INCLUDE_DIR})
+target_link_libraries(${TARGET_NAME} CURL::libcurl ${RDKAFKA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
+if (ENABLE_NEW_RECEIVER_MONITORING)
+target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+endif()
 
 
 add_executable(${TARGET_NAME}-bin src/main.cpp)
@@ -75,8 +146,14 @@ set_target_properties(${TARGET_NAME}-bin PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
         )
 
+if (WIN32)
+    file(GLOB KAFKA_DLLS "${RDKAFKA_BIN_DIR}/rdkafka*.dll")
+    file(COPY ${KAFKA_DLLS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 configure_file(docker/Dockerfile . COPYONLY)
 configure_file(docker/install_libfabric.sh . COPYONLY)
+configure_file(docker/install_rdkafka.sh . COPYONLY)
 
 
 ################################
@@ -92,6 +169,7 @@ set(TEST_SOURCE_FILES
         unittests/statistics/test_receiver_statistics.cpp
         unittests/test_config.cpp
         unittests/test_request.cpp
+
         unittests/request_handler/test_request_factory.cpp
         unittests/request_handler/test_request_handler_file_process.cpp
         unittests/request_handler/test_request_handler_db_writer.cpp
@@ -107,8 +185,12 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp
         unittests/request_handler/test_request_handler_db_get_meta.cpp
+        unittests/request_handler/test_request_handler_monitoring.cpp
+
+        unittests/request_handler/test_request_handler_kafka_notify.cpp
         unittests/statistics/test_statistics_sender_influx_db.cpp
         unittests/statistics/test_statistics_sender_fluentd.cpp
+
         unittests/mock_receiver_config.cpp
         unittests/request_handler/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
@@ -116,12 +198,23 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/file_processors/test_file_processor.cpp
         unittests/request_handler/file_processors/test_receive_file_processor.cpp
         )
+
+if (ENABLE_NEW_RECEIVER_MONITORING)
+    set(TEST_SOURCE_FILES
+            ${TEST_SOURCE_FILES}
+
+            unittests/monitoring/test_monitoring_client.cpp
+            unittests/monitoring/test_monitoring_client_to_be_send_data.cpp
+            )
+endif()
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}"
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/*.h
+        ${CMAKE_CURRENT_BINARY_DIR}/*.h
+        ${CMAKE_CURRENT_BINARY_DIR}/*.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/net_server/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/net_server/*.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/request_handler/*.cpp

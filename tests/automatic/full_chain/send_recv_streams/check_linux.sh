@@ -12,13 +12,14 @@ token=$ASAPO_TEST_RW_TOKEN
 beamline=test
 
 set -e
+set -o pipefail
 
 trap Cleanup EXIT
 
 network_type=$2
 
 Cleanup() {
-    set +e
+  set +e
 	echo "db.dropDatabase()" | mongo ${indatabase_name}
 }
 

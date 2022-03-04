@@ -12,9 +12,9 @@ namespace asapo {
 class WatchIO {
   public:
     explicit WatchIO();
-    VIRTUAL HANDLE Init(const char* folder, Error* err);
-    VIRTUAL Error ReadDirectoryChanges(HANDLE handle, LPVOID buffer, DWORD buffer_length, LPDWORD bytes_returned);
-    VIRTUAL bool IsDirectory(const std::string& path);
+    ASAPO_VIRTUAL HANDLE Init(const char* folder, Error* err);
+    ASAPO_VIRTUAL Error ReadDirectoryChanges(HANDLE handle, LPVOID buffer, DWORD buffer_length, LPDWORD bytes_returned);
+    ASAPO_VIRTUAL bool IsDirectory(const std::string& path);
   private:
     std::unique_ptr<IO>io_;
 };

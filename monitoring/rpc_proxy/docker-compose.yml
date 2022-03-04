@@ -1,0 +1,13 @@
+version: '3'
+services:
+    envoy:
+        build:
+            context: ./
+            dockerfile: ./Dockerfile
+        image: grpcweb/envoy
+        ports:
+        - "5020:8080"
+        - "9901:9901"
+        extra_hosts:
+            dockerhost: ${DOCKER_HOST_IP}
+

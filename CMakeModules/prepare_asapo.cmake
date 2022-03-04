@@ -4,6 +4,7 @@ function(prepare_asapo)
     get_target_property(DISCOVERY_FULLPATH asapo-discovery EXENAME)
     get_target_property(AUTHORIZER_FULLPATH asapo-authorizer EXENAME)
     get_target_property(FILE_TRANSFER_FULLPATH asapo-file-transfer EXENAME)
+    get_target_property(MONITORING_SERVER_FULLPATH asapo-monitoring-server EXENAME)
     get_target_property(BROKER_FULLPATH asapo-broker EXENAME)
     set(WORK_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -32,12 +33,19 @@ function(prepare_asapo)
     else()
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_tcp.json.tpl.lin.in receiver_tcp.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_fabric.json.tpl.lin.in receiver_fabric.json.tpl @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_kafka.json.tpl.lin.in receiver_kafka.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.lin authorizer.json.tpl COPYONLY)
+
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/monitoring_server_settings.json.tpl monitoring_server.json.tpl COPYONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/monitoring.nmd.in  monitoring.nmd @ONLY)
+
+
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/start_services.sh start_services.sh COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/stop_services.sh stop_services.sh COPYONLY)
 
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_tcp.nmd.in  receiver_tcp.nmd @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_fabric.nmd.in  receiver_fabric.nmd @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_kafka.nmd.in  receiver_kafka.nmd @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_lin.nmd nginx_kill.nmd @ONLY)
     endif()
 

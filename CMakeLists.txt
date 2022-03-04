@@ -4,13 +4,13 @@ project(ASAPO)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/ ${PROJECT_SOURCE_DIR}/CMakeIncludes/)
 
 #protocol version changes if one of the microservice API's change
-set (ASAPO_CONSUMER_PROTOCOL "v0.5")
-set (ASAPO_PRODUCER_PROTOCOL "v0.5")
+set (ASAPO_CONSUMER_PROTOCOL "v0.6")
+set (ASAPO_PRODUCER_PROTOCOL "v0.6")
 set (ASAPO_DISCOVERY_API_VER "v0.1")
 set (ASAPO_AUTHORIZER_API_VER "v0.2")
-set (ASAPO_BROKER_API_VER "v0.5")
+set (ASAPO_BROKER_API_VER "v0.6")
 set (ASAPO_FILE_TRANSFER_SERVICE_API_VER "v0.2")
-set (ASAPO_RECEIVER_API_VER "v0.5")
+set (ASAPO_RECEIVER_API_VER "v0.6")
 set (ASAPO_RDS_API_VER "v0.1")
 set (DB_SCHEMA_VER "v0.1")
 
@@ -44,6 +44,8 @@ option(BUILD_ASAPO_SITE "Build the asapo web site" OFF)
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
 option(ENABLE_LIBFABRIC_LOCALHOST "Emulates LibFabric stack over TCP. Only for localhost and testing purposes." OFF)
 
+option(ENABLE_NEW_RECEIVER_MONITORING "Enables the new monitoring for the receiver, but requires gRPC" OFF)
+
 option(BUILD_SHARED_CLIENT_LIBS "Build shared consumer and producer libs" ON)
 option(BUILD_STATIC_CLIENT_LIBS "Build static consumer and producer libs" ON)
 
@@ -72,6 +74,7 @@ if (NOT BUILD_CLIENTS_ONLY)
     add_subdirectory(authorizer)
     add_subdirectory(asapo_tools)
     add_subdirectory(file_transfer)
+    add_subdirectory(monitoring)
 endif()
 
 add_subdirectory(deploy)

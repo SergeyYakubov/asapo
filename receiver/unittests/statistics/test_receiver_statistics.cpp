@@ -7,6 +7,8 @@
 #include "../../src/statistics/statistics_sender_influx_db.h"
 #include "../../src/statistics/statistics_sender_fluentd.h"
 #include "../receiver_mocking.h"
+#include "../../src/receiver_config.h"
+#include "../mock_receiver_config.h"
 
 
 using namespace testing;
@@ -27,6 +29,10 @@ class ReceiverStatisticTests : public Test {
     void TestTimer(const StatisticEntity& entity);
     MockStatisticsSender mock_statistics_sender;
     void SetUp() override {
+        asapo::ReceiverConfig test_config;
+        test_config.monitor_performance = true;
+        asapo::SetReceiverConfig(test_config, "none");
+
         statistics.statistics_sender_list__.clear();
         statistics.statistics_sender_list__.emplace_back(&mock_statistics_sender);
     }
@@ -58,57 +64,108 @@ StatisticsToSend ReceiverStatisticTests::ExtractStat() {
     stat.data_volume = 0;
 
     EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).
-    WillOnce(SaveArg1ToSendStatR(&stat));
+        WillOnce(SaveArg1ToSendStatR(&stat));
 
-    statistics.SendIfNeeded();
+    statistics.SendIfNeeded(false);
     return stat;
 }
 
 
 void ReceiverStatisticTests::TestTimer(const StatisticEntity& entity) {
-    statistics.StartTimer(entity);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    asapo::RequestStatisticsPtr instancedStatistics{new asapo::RequestStatistics};
 
-    statistics.StopTimer();
+    instancedStatistics->StartTimer(entity);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    instancedStatistics->StopTimer();
+
+    statistics.ApplyTimeFrom(instancedStatistics.get());
 
     auto stat = ExtractStat();
 
+    ASSERT_THAT(stat.extra_entities.size(), Gt(static_cast<size_t>(entity)));
     ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Gt(0));
     ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Le(1.0));
-
 }
 
 TEST_F(ReceiverStatisticTests, TimerForDatabase) {
     TestTimer(StatisticEntity::kDatabase);
 }
 
-TEST_F(ReceiverStatisticTests, TimerForNetwork) {
-    TestTimer(StatisticEntity::kNetwork);
+TEST_F(ReceiverStatisticTests, TimerForNetworkIncoming) {
+    TestTimer(StatisticEntity::kNetworkIncoming);
+}
+
+TEST_F(ReceiverStatisticTests, TimerForNetworkOutgoing) {
+    TestTimer(StatisticEntity::kNetworkOutgoing);
 }
 
 TEST_F(ReceiverStatisticTests, TimerForDisk) {
     TestTimer(StatisticEntity::kDisk);
 }
 
-TEST_F(ReceiverStatisticTests, TimerForAll) {
-    statistics.StartTimer(StatisticEntity::kDatabase);
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    statistics.StopTimer();
-    statistics.StartTimer(StatisticEntity::kNetwork);
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
-    statistics.StopTimer();
+TEST_F(ReceiverStatisticTests, TimerForMonitoring) {
+    TestTimer(StatisticEntity::kMonitoring);
+}
 
-    statistics.StartTimer(StatisticEntity::kDisk);
+TEST_F(ReceiverStatisticTests, ByteCounter) {
+    asapo::RequestStatisticsPtr instancedStatistics{new asapo::RequestStatistics};
+
+    instancedStatistics->AddIncomingBytes(53);
+    instancedStatistics->AddIncomingBytes(23);
+
+    instancedStatistics->AddOutgoingBytes(5);
+    instancedStatistics->AddOutgoingBytes(7);
+
+    ASSERT_THAT(instancedStatistics->GetIncomingBytes(), Eq(76));
+    ASSERT_THAT(instancedStatistics->GetOutgoingBytes(), Eq(12));
+}
+
+TEST_F(ReceiverStatisticTests, TimerForAll) {
+    asapo::RequestStatisticsPtr instancedStatistics{new asapo::RequestStatistics};
+
+    // kDatabase
+    instancedStatistics->StartTimer(StatisticEntity::kDatabase);
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    instancedStatistics->StopTimer();
+
+    // kNetworkIncoming
+    instancedStatistics->StartTimer(StatisticEntity::kNetworkIncoming);
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    instancedStatistics->StopTimer();
+
+    // kNetworkOutgoing
+    instancedStatistics->StartTimer(StatisticEntity::kNetworkOutgoing);
     std::this_thread::sleep_for(std::chrono::milliseconds(40));
-    statistics.StopTimer();
+    instancedStatistics->StopTimer();
+
+    // kDisk
+    instancedStatistics->StartTimer(StatisticEntity::kDisk);
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    instancedStatistics->StopTimer();
+
+    // kMonitoring
+    instancedStatistics->StartTimer(StatisticEntity::kMonitoring);
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    instancedStatistics->StopTimer();
+
+    statistics.ApplyTimeFrom(instancedStatistics.get());
 
     auto stat = ExtractStat();
 
+    ASSERT_THAT(stat.extra_entities.size(), Gt(static_cast<size_t>(StatisticEntity::kDatabase)));
     ASSERT_THAT(stat.extra_entities[StatisticEntity::kDatabase].second, Gt(0));
 
-    ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetwork].second, Gt(0));
+    ASSERT_THAT(stat.extra_entities.size(), Gt(static_cast<size_t>(StatisticEntity::kNetworkIncoming)));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetworkIncoming].second, Gt(0));
 
+    ASSERT_THAT(stat.extra_entities.size(), Gt(static_cast<size_t>(StatisticEntity::kNetworkOutgoing)));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetworkOutgoing].second, Gt(0));
+
+    ASSERT_THAT(stat.extra_entities.size(), Gt(static_cast<size_t>(StatisticEntity::kDisk)));
     ASSERT_THAT(stat.extra_entities[StatisticEntity::kDisk].second, Gt(0));
+
+    ASSERT_THAT(stat.extra_entities.size(), Gt(static_cast<size_t>(StatisticEntity::kMonitoring)));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kMonitoring].second, Gt(0));
 }
 
 }

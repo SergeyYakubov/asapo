@@ -7,7 +7,7 @@
 #include "asapo/logger/logger.h"
 #include "common.h"
 #include "asapo/common/data_structs.h"
-#include "asapo/preprocessor/definitions.h"
+#include "asapo/preprocessor/deprecated.h"
 
 namespace asapo {
 
@@ -127,7 +127,7 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(
+    virtual Error ASAPO_DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(
         const std::string& metadata,
         RequestCallback callback)  = 0;
 
@@ -161,14 +161,13 @@ class Producer {
     //! Set beamtime id which producer will use to send data
     virtual Error SetCredentials(SourceCredentials source_cred) = 0;
     //! Get current size of the requests queue (number of requests pending/being processed)
-    virtual  uint64_t  GetRequestsQueueSize() = 0;
+    virtual uint64_t GetRequestsQueueSize() = 0;
     //! Get current volume of the requests queue (total memory of occupied by pending/being processed requests)
-    virtual  uint64_t  GetRequestsQueueVolumeMb() = 0;
+    virtual uint64_t GetRequestsQueueVolumeMb() = 0;
     //! Set maximum size of the requests queue (0 for unlimited, default 0) and volume in Megabytes (0 for unlimited, default 0)
-    virtual  void SetRequestsQueueLimits(uint64_t size, uint64_t volume) = 0;
+    virtual void SetRequestsQueueLimits(uint64_t size, uint64_t volume) = 0;
     //! Wait until all current requests are processed or timeout
     virtual Error WaitRequestsFinished(uint64_t timeout_ms) = 0;
-
 };
 }
 
