@@ -21,7 +21,7 @@ ASAPO_USER=`id -u`:`id -g`
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 
-cd $SERVICE_DATA_CLUSTER_SHAREDdetector
+cd $SERVICE_DATA_CLUSTER_SHARED
 mkdir -p fluentd grafana influxdb influxdb2 mongodb prometheus alertmanager
 chmod 777 *
 
@@ -44,4 +44,4 @@ docker run --privileged --userns=host --security-opt no-new-privileges --rm \
   --name asapo --net=host -d yakser/asapo-cluster:22.03.0
 
 sleep 15
-docker exec asapo jobs-start
+docker exec asapo jobs-start  -var perf_monitor=true

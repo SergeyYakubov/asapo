@@ -69,21 +69,21 @@ resource "null_resource" "asapo-broker" {
 
 resource "null_resource" "asapo-monitoring-server" {
   provisioner "local-exec" {
-    command = "asapo-wait-service asapo-monitoring"
+    command = "asapo-wait-service asapo-monitoring  ${var.perf_monitor}"
   }
   depends_on = [nomad_job.asapo-perfmetrics]
 }
 
 resource "null_resource" "asapo-monitoring-proxy" {
   provisioner "local-exec" {
-    command = "asapo-wait-service asapo-monitoring-proxy"
+    command = "asapo-wait-service asapo-monitoring-proxy  ${var.perf_monitor}"
   }
   depends_on = [nomad_job.asapo-perfmetrics]
 }
 
 resource "null_resource" "asapo-monitoring-ui" {
   provisioner "local-exec" {
-    command = "asapo-wait-service asapo-monitoring-ui"
+    command = "asapo-wait-service asapo-monitoring-ui  ${var.perf_monitor}"
   }
   depends_on = [nomad_job.asapo-perfmetrics]
 }

@@ -10,7 +10,7 @@ mongo_version = "4.0.0"
 grafana_version="7.5.0"
 influxdb_version = "1.8.4"
 elk_logs = false
-perf_monitor = false
+perf_monitor = true
 nomad_logs = false
 force_pull_images = false
 

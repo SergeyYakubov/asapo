@@ -35,4 +35,4 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   --name asapo --net=host -d yakser/asapo-cluster:22.03.0
 
 sleep 15
-docker exec asapo jobs-start
+docker exec asapo jobs-start  -var perf_monitor=true
