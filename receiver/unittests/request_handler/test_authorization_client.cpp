@@ -8,7 +8,6 @@
 #include "asapo/common/networking.h"
 #include "../mock_receiver_config.h"
 #include "asapo/preprocessor/definitions.h"
-#include "asapo/common/internal/version.h"
 
 #include "../receiver_mocking.h"
 
@@ -44,30 +43,23 @@ class AuthorizerClientTests : public Test {
     std::string expected_beamline = "beamline";
     std::string expected_beamline_path = "/beamline/p01/current";
     std::string expected_core_path = "/gpfs/blabla";
-    std::string expected_pipeline_step_id = "pipeline_step_id";
-    std::string expected_producer_instance_id = "producer_instance_id";
-
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string;
-    std::string expect_request_string_old;
     std::string expected_source_credentials;
-    std::string expected_source_credentials_old;
     asapo::SourceType expected_source_type = asapo::SourceType::kProcessed;
+
     std::string expected_source_type_str = "processed";
     std::string expected_access_type_str = "[\"write\"]";
     void SetUp() override {
         GenericRequestHeader request_header;
-        expected_source_credentials = "processed%" + expected_producer_instance_id+"%"+expected_pipeline_step_id+"%"+expected_beamtime_id + "%source%token";
-        expected_source_credentials_old = "processed%"+expected_beamtime_id + "%source%token";
+        expected_source_credentials = "processed%" + expected_beamtime_id + "%source%token";
         expected_auth_data.source_credentials = expected_source_credentials;
         expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
                                 "\",\"OriginHost\":\"" +
                                 expected_producer_uri + "\"}";
-        expect_request_string_old = std::string("{\"SourceCredentials\":\"") + "processed%" + expected_producer_uri+"%DefaultStep%"+expected_beamtime_id + "%source%token" +
-            "\",\"OriginHost\":\"" +
-            expected_producer_uri + "\"}";
-        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, expected_producer_uri, nullptr, nullptr});
+
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, expected_producer_uri, nullptr});
         client.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         client.log__ = &mock_logger;
         config.authorization_server = expected_authorization_server;
@@ -78,9 +70,7 @@ class AuthorizerClientTests : public Test {
     void TearDown() override {
         client.http_client__.release();
     }
-    void MockAuthRequest(bool error, HttpCode code = HttpCode::OK, bool oldVersion = false) {
-        EXPECT_CALL(*mock_request,
-                    GetApiVersion()).WillOnce(Return(oldVersion?"v0.5":asapo::GetReceiverApiVersion()));
+    void MockAuthRequest(bool error, HttpCode code = HttpCode::OK) {
         EXPECT_CALL(*mock_request,
                     GetOriginUri()).WillOnce(ReturnRef(expected_producer_uri));
         if (error) {
@@ -92,20 +82,17 @@ class AuthorizerClientTests : public Test {
                      ));
         } else {
             EXPECT_CALL(mock_http_client,
-                        Post_t(expected_authorization_server + "/authorize", _, oldVersion?expect_request_string_old:expect_request_string, _, _)).
+                        Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
                 DoAll(SetArgPointee<4>(nullptr),
                       SetArgPointee<3>(code),
                       Return("{\"beamtimeId\":\"" + expected_beamtime_id +
-                             "\",\"dataSource\":\"" + expected_data_source +
-                             "\",\"beamline-path\":\"" + expected_beamline_path +
-                             "\",\"corePath\":\"" + expected_core_path +
-                             "\",\"source-type\":\"" + expected_source_type_str +
-                             "\",\"beamline\":\"" + expected_beamline +
-                             "\",\"access-types\":" + expected_access_type_str +
-                             ",\"instanceId\":\"" + (oldVersion?expected_producer_uri:expected_producer_instance_id) +
-                             "\",\"pipelineStep\":\"" + (oldVersion?"DefaultStep":expected_pipeline_step_id) +
-                             "\"}")
+                             "\",\"dataSource\":" + "\"" + expected_data_source +
+                             "\",\"beamline-path\":" + "\"" + expected_beamline_path +
+                             "\",\"corePath\":" + "\"" + expected_core_path +
+                             "\",\"source-type\":" + "\"" + expected_source_type_str +
+                             "\",\"beamline\":" + "\"" + expected_beamline +
+                             "\",\"access-types\":" + expected_access_type_str + "}")
                      ));
         }
     }
@@ -147,23 +134,7 @@ TEST_F(AuthorizerClientTests, AuthorizeOk) {
     ASSERT_THAT(expected_auth_data.online_path, Eq(expected_beamline_path));
     ASSERT_THAT(expected_auth_data.last_update, Gt(std::chrono::system_clock::time_point{}));
     ASSERT_THAT(expected_auth_data.source_credentials, Eq(expected_source_credentials));
-    ASSERT_THAT(expected_auth_data.pipeline_step_id, Eq(expected_pipeline_step_id));
-    ASSERT_THAT(expected_auth_data.producer_instance_id, Eq(expected_producer_instance_id));
-}
 
-TEST_F(AuthorizerClientTests, AuthorizeOkOldVersion) {
-    MockAuthRequest(false, HttpCode::OK, true);
-
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
-                                         HasSubstr(expected_beamtime_id)
-    )));
-
-    expected_auth_data.source_credentials = expected_source_credentials_old;
-    auto err = client.Authorize(mock_request.get(), &expected_auth_data);
-
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(expected_auth_data.pipeline_step_id, Eq("DefaultStep"));
-    ASSERT_THAT(expected_auth_data.producer_instance_id, Eq(expected_producer_uri));
 }
 
 TEST_F(AuthorizerClientTests, AuthorizeFailsOnWrongAccessType) {

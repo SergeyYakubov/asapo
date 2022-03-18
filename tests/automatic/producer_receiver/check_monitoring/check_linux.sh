@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 database_name=db_test
-new_monitor_database_name=asapo_monitoring
 beamtime_id=asapo_test
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
@@ -16,9 +15,8 @@ trap Cleanup EXIT
 Cleanup() {
 	echo cleanup
 	influx -database ${database_name} -execute "drop series from statistics, RequestsRate"
-  influx -database ${new_monitor_database_name} -execute "drop series from /.*/"
-  echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-  rm -rf ${receiver_root_folder}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
+    rm -rf ${receiver_root_folder}
 }
 
 mkdir -p ${receiver_folder}

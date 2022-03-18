@@ -8,8 +8,6 @@
 namespace asapo {
 
 struct AuthorizationData {
-    std::string producer_instance_id;
-    std::string pipeline_step_id;
     std::string beamtime_id;
     std::string data_source;
     std::string beamline;

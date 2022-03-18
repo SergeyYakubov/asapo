@@ -53,7 +53,7 @@ class ConfigTests : public Test {
 TEST_F(ConfigTests, ReadSettings) {
     PrepareConfig();
 
-    auto err = asapo::SetReceiverConfigWithError(test_config, "none");
+    auto err = asapo::SetReceiverConfig(test_config, "none");
 
     auto config = GetReceiverConfig();
 
@@ -96,7 +96,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
                                     "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode", "MonitorPerformance",
                                     "ReceiveToDiskThresholdMB", "Metrics", "Expose","Enabled"};
     for (const auto& field : fields) {
-        auto err = asapo::SetReceiverConfigWithError(test_config, field);
+        auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));
     }
 }

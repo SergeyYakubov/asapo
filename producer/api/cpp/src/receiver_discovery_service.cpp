@@ -41,17 +41,15 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
     Error err;
     HttpCode code;
 
-    auto response = httpclient__->Get(endpoint_, &code, &err);
+    auto responce = httpclient__->Get(endpoint_, &code, &err);
     if (err != nullptr) {
         return err;
     }
     if (code != HttpCode::OK) {
-        return GeneralErrorTemplates::kSimpleError.Generate(response);
+        return GeneralErrorTemplates::kSimpleError.Generate(responce);
     }
-    if (response.empty()) {
-        return GeneralErrorTemplates::kSimpleError.Generate("Empty response from discovery service");
-    }
-    return ParseResponse(response, list, max_connections);
+    return ParseResponse(responce, list, max_connections);
+
 }
 
 void ReceiverDiscoveryService::LogUriList(const ReceiversList& uris) {

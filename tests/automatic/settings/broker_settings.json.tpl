@@ -4,7 +4,6 @@
   "AuthorizationServer": "localhost:8400/asapo-authorizer",
   "PerformanceDbServer": "localhost:8086",
   "MonitorPerformance": true,
-  "MonitoringServerUrl":"auto",
   "CheckResendInterval":0,
   "PerformanceDbName": "db_test",
   "Port":{{ env "NOMAD_PORT_broker" }},

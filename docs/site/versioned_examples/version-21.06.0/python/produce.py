@@ -19,7 +19,7 @@ producer = asapo_producer.create_producer(endpoint,
                                  beamtime,       # the folder should exist
                                  'auto',         # can be 'auto', if beamtime_id is given
                                  'test_source',  # source
-                                 '',             # authorization token
+                                 '',             # athorization token
                                  1,              # number of threads. Increase, if the sending speed seems slow
                                  60000)          # timeout. Do not change.
 

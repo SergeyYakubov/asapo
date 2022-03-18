@@ -11,7 +11,7 @@ FabricConsumerClient::FabricConsumerClient(): factory__(fabric::GenerateDefaultF
 
 }
 
-Error FabricConsumerClient::GetData(const MessageMeta* info, const std::string& request_sender_details, MessageData* data) {
+Error FabricConsumerClient::GetData(const MessageMeta* info, MessageData* data) {
     Error err;
     if (!client__) {
         client__ = factory__->CreateClient(&err);
@@ -34,9 +34,9 @@ Error FabricConsumerClient::GetData(const MessageMeta* info, const std::string& 
     }
 
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
-    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
+    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize - 1);
+    request_header.api_version[kMaxVersionSize - 1] = '\0';
     memcpy(request_header.message, mr->GetDetails(), sizeof(fabric::MemoryRegionDetails));
-    strncpy(request_header.stream, request_sender_details.c_str(), kMaxMessageSize);
     GenericNetworkResponse response{};
 
     PerformNetworkTransfer(address, &request_header, &response, &err);

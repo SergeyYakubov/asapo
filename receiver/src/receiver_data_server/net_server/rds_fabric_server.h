@@ -8,7 +8,7 @@ namespace asapo {
 
 class RdsFabricServer : public RdsNetServer {
   public:
-    explicit RdsFabricServer(std::string  listenAddress, const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient monitoring);
+    explicit RdsFabricServer(std::string  listenAddress, const AbstractLogger* logger);
     ~RdsFabricServer() override;
 
     // modified in testings to mock system calls, otherwise do not touch
@@ -18,7 +18,6 @@ class RdsFabricServer : public RdsNetServer {
     std::unique_ptr<fabric::FabricServer> server__;
   private:
     std::string listenAddress_;
-    SharedReceiverMonitoringClient monitoring_;
   public: // NetServer implementation
     Error Initialize() override;
 
@@ -30,8 +29,6 @@ class RdsFabricServer : public RdsNetServer {
                                   const CacheMeta* cache_slot) override;
 
     void HandleAfterError(uint64_t source_id) override;
-
-    SharedReceiverMonitoringClient Monitoring() override;
 };
 
 }

@@ -2,22 +2,18 @@ from ubuntu:18.04
 
 ENV GOPATH /tmp
 
+ADD install_curl.sh install_curl.sh
+ADD install_cmake.sh install_cmake.sh
+
 RUN apt update && apt install -y g++ git wget python python3 python-numpy python3-numpy python-pip python3-pip \
 zlib1g-dev python3-all-dev python-all-dev python-stdeb python3-stdeb
 
 RUN pip  --no-cache-dir install cython && pip3 --no-cache-dir install cython sphinx
 
-ADD install_cmake.sh install_cmake.sh
-RUN ./install_cmake.sh
-
-ADD install_curl.sh install_curl.sh
-RUN ./install_curl.sh /curl
+RUN ./install_curl.sh /curl &&  ./install_cmake.sh
 
 ADD install_libfabric.sh install_libfabric.sh
 RUN ./install_libfabric.sh
-
-ADD install_grpc.sh install_grpc.sh
-RUN ./install_grpc.sh
 
 RUN apt install -y libcurl4-openssl-dev
 

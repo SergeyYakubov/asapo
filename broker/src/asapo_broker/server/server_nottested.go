@@ -19,16 +19,9 @@ func StartStatistics() {
 	go statistics.Monitor()
 }
 
-func StartMonitoring() {
-	monitoring.Sender = new(gRPCBrokerMonitoringDataSender)
-	monitoring.Init()
-	go monitoring.RunThread()
-}
-
 func Start() {
 	if settings.MonitorPerformance {
 		StartStatistics()
-		StartMonitoring()
 	}
 	mux := utils.NewRouter(listRoutes)
 	mux.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
@@ -55,21 +48,6 @@ func ReadConfig(fname string) (log.Level, error) {
 		return log.FatalLevel, errors.New("PerformanceDbServer not set")
 	}
 
-	if settings.MonitoringServerUrl == "" {
-		return log.FatalLevel, errors.New("MonitoringServerUrl not set")
-	}
-
-	if settings.AuthorizationServer == "" {
-		return log.FatalLevel, errors.New("AuthorizationServer not set")
-	}
-	if settings.PerformanceDbName == "" {
-		return log.FatalLevel, errors.New("PerformanceDbName not set")
-	}
-
-	if settings.MonitoringServerUrl == "auto" && settings.DiscoveryServer == "" {
-		return log.FatalLevel, errors.New("DiscoveryServer not set for auto MonitoringServerUrl")
-	}
-
 	if settings.DatabaseServer == "auto" && settings.DiscoveryServer == "" {
 		return log.FatalLevel, errors.New("DiscoveryServer not set for auto DatabaseServer")
 	}
@@ -80,6 +58,10 @@ func ReadConfig(fname string) (log.Level, error) {
 
 	if settings.CheckResendInterval==nil || *settings.CheckResendInterval<0  {
 		return log.FatalLevel, errors.New("Resend interval must be set and not negative")
+	}
+
+	if settings.PerformanceDbName == "" {
+		return log.FatalLevel, errors.New("PerformanceDbName not set")
 	}
 
 	if settings.AuthorizationServer == "" {

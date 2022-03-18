@@ -29,12 +29,20 @@ job "asapo-file-transfer" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "${docker_repository}/asapo-file-transfer${image_suffix}"
+        image = "${image_registry}/asapo-file-transfer${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/file_transfer/config.json",
                            "${offline_dir}:${offline_dir}",
                            "${online_dir}:${online_dir}"
                            ]
+
+        %{ if image_registry_username != "" }
+        auth {
+            username = "${image_registry_username}"
+            password = "${image_registry_password}"
+        }
+        %{endif}
+
         %{ if ! nomad_logs  }
           logging {
           type = "fluentd"

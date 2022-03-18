@@ -16,9 +16,8 @@ data "template_file" "nginx" {
     consul_dns_port = "${var.consul_dns_port}"
     prometheus_port = "${var.prometheus_port}"
     alertmanager_port = "${var.alertmanager_port}"
-    monitoring_ui_port = "${var.monitoring_ui_port}"
-    monitoring_proxy_port = "${var.monitoring_proxy_port}"
   }
+
 }
 
 data "template_file" "asapo_services" {
@@ -27,8 +26,10 @@ data "template_file" "asapo_services" {
     scripts_dir = "${var.job_scripts_dir}"
     online_dir = "${var.online_dir}"
     offline_dir = "${var.offline_dir}"
-    docker_repository = "${var.asapo_docker_repository}"
     ldap_uri = "${var.ldap_uri}"
+    image_registry = "${var.asapo_image_registry}"
+    image_registry_username = "${var.asapo_image_registry_username}"
+    image_registry_password = "${var.asapo_image_registry_password}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     authorizer_total_memory_size = "${var.authorizer_total_memory_size}"
@@ -46,7 +47,9 @@ data "template_file" "asapo_receivers" {
     scripts_dir = "${var.job_scripts_dir}"
     online_dir = "${var.online_dir}"
     offline_dir = "${var.offline_dir}"
-    docker_repository = "${var.asapo_docker_repository}"
+    image_registry = "${var.asapo_image_registry}"
+    image_registry_username = "${var.asapo_image_registry_username}"
+    image_registry_password = "${var.asapo_image_registry_password}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
@@ -68,7 +71,9 @@ data "template_file" "asapo_brokers" {
   template = "${file("${var.job_scripts_dir}/asapo-brokers.nmd.tpl")}"
   vars = {
     scripts_dir = "${var.job_scripts_dir}"
-    docker_repository = "${var.asapo_docker_repository}"
+    image_registry = "${var.asapo_image_registry}"
+    image_registry_username = "${var.asapo_image_registry_username}"
+    image_registry_password = "${var.asapo_image_registry_password}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     asapo_user = "${var.asapo_user}"
@@ -85,7 +90,9 @@ data "template_file" "asapo_fts" {
     scripts_dir = "${var.job_scripts_dir}"
     online_dir = "${var.online_dir}"
     offline_dir = "${var.offline_dir}"
-    docker_repository = "${var.asapo_docker_repository}"
+    image_registry = "${var.asapo_image_registry}"
+    image_registry_username = "${var.asapo_image_registry_username}"
+    image_registry_password = "${var.asapo_image_registry_password}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     asapo_user = "${var.asapo_user}"
@@ -98,8 +105,6 @@ data "template_file" "asapo_perfmetrics" {
   template = "${file("${var.job_scripts_dir}/asapo-perfmetrics.nmd.tpl")}"
   vars = {
     service_dir = "${var.service_dir}"
-    image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
-    docker_repository = "${var.asapo_docker_repository}"
     influxdb_version = "${var.influxdb_version}"
     grafana_version = "${var.grafana_version}"
     grafana_total_memory_size = "${var.grafana_total_memory_size}"
@@ -109,15 +114,7 @@ data "template_file" "asapo_perfmetrics" {
     asapo_user = "${var.asapo_user}"
     influxdb_rpc_port = "${var.influxdb_rpc_port}"
     perf_monitor = "${var.perf_monitor}"
-    monitoring_server_total_memory_size = "${var.monitoring_server_total_memory_size}"
-    monitoring_proxy_total_memory_size = "${var.monitoring_proxy_total_memory_size}"
-    monitoring_ui_total_memory_size = "${var.monitoring_ui_total_memory_size}"
-    monitoring_proxy_port = "${var.monitoring_proxy_port}"
-    monitoring_ui_port = "${var.monitoring_ui_port}"
-    force_pull_images = "${var.force_pull_images}"
-    nomad_logs = "${var.nomad_logs}"
-    scripts_dir = "${var.job_scripts_dir}"
-  }
+    }
 }
 
 

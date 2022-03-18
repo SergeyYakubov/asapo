@@ -24,16 +24,6 @@ func (api *DiscoveryAPI) GetMongoDbAddress() (string, error) {
 	return string(body), err
 }
 
-func (api *DiscoveryAPI) GetMonitoringServerUrl() (string, error) {
-	resp, err := api.client.Get(api.baseURL + "/asapo-monitoring")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
-}
-
 func CreateDiscoveryService(client *http.Client,uri string) DiscoveryAPI{
 	return DiscoveryAPI{client, uri}
 }

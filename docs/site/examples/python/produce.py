@@ -23,12 +23,9 @@ producer = asapo_producer \
                                  beamtime,       # the folder should exist
                                  'auto',         # can be 'auto', if beamtime_id is given
                                  'test_source',  # source
-                                 '',             # authorization token
+                                 '',             # athorization token
                                  1,              # number of threads. Increase, if the sending speed seems slow
-                                 60000,          # timeout. Do not change.
-                                 'test_producer_instance', # producer instance id (can be 'auto')
-                                 'pipeline_step_1' # pipeline step id
-                                 )
+                                 60000)          # timeout. Do not change.
 
 producer.set_log_level("error") # other values are "warning", "info" or "debug".
 # create snippet_end

@@ -58,7 +58,7 @@ func getSupportedProtocols(client string) ([]Protocol, error) {
 	case "producer":
 		return GetSupportedProducerProtocols(), nil
 	}
-	return nil, errors.New("unknown client '" + client + "'")
+	return nil, errors.New("unknown client")
 }
 
 func FindProtocol(client string, version string) (Protocol, error) {

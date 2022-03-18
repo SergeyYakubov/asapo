@@ -64,7 +64,7 @@ class DbCheckRequestHandlerTests : public Test {
         request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
         config.database_uri = "127.0.0.1:27017";
         config.dataserver.advertise_uri = expected_host_uri;
         config.dataserver.listen_port = expected_port;

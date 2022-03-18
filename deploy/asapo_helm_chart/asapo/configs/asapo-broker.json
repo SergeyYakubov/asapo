@@ -3,7 +3,6 @@
   "DiscoveryServer": "asapo-discovery:{{ .Values.ownServices.discovery.port }}",
   "AuthorizationServer": "asapo-authorizer:{{ .Values.ownServices.authorization.port }}",
   "PerformanceDbServer":"{{ .Chart.Name }}-influxdb:{{ .Values.influxdb.influxdb.service.port }}",
-  "MonitoringServerUrl":"auto",
   "MonitorPerformance": true,
   "PerformanceDbName": "asapo_brokers",
   "Port": {{ .Values.ownServices.broker.port }},

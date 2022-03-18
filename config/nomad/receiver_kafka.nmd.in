@@ -19,7 +19,7 @@ job "receiver" {
       }
 
       resources {
-        cpu    = 50 # 50 MHz
+        cpu    = 500 # 500 MHz
         memory = 256 # 256MB
         network {
           port "recv" {}

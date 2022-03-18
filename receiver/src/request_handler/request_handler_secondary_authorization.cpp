@@ -30,8 +30,6 @@ bool RequestHandlerSecondaryAuthorization::NeedReauthorize() const {
 }
 
 void RequestHandlerSecondaryAuthorization::SetRequestFields(Request* request) const {
-    request->SetProducerInstanceId(authorization_cache_->producer_instance_id);
-    request->SetPipelineStepId(authorization_cache_->pipeline_step_id);
     request->SetBeamtimeId(authorization_cache_->beamtime_id);
     request->SetBeamline(authorization_cache_->beamline);
     request->SetDataSource(authorization_cache_->data_source);

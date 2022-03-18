@@ -1,20 +1,17 @@
 #include "requests_dispatcher.h"
-
-#include <utility>
-#include "../request.h"
 #include "asapo/io/io_factory.h"
 #include "../receiver_logger.h"
 #include "asapo/database/db_error.h"
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
-                                       ReceiverStatistics* statistics,SharedReceiverMonitoringClient monitoring, SharedCache cache,KafkaClient* kafka_client) : statistics__{statistics},
+                                       ReceiverStatistics* statistics, SharedCache cache, KafkaClient* kafka_client) : statistics__{statistics},
     io__{GenerateDefaultIO()},
     log__{
     GetDefaultReceiverLogger()},
 request_factory__{
     new RequestFactory{
-        std::move(monitoring),cache,kafka_client}},
+        cache, kafka_client}},
 socket_fd_{socket_fd},
 producer_uri_{
     std::move(address)} {
@@ -44,13 +41,15 @@ GenericNetworkResponse RequestsDispatcher::CreateResponseToRequest(const std::un
     generic_response.error_code = GetNetworkCodeFromError(handle_error);
     strcpy(generic_response.message, "");
     if (handle_error) {
-        strncpy(generic_response.message, handle_error->Explain().c_str(), kMaxMessageSize);
+        strncpy(generic_response.message, handle_error->Explain().c_str(), kMaxMessageSize - 1);
+        generic_response.message[kMaxMessageSize - 1] = '\0';
     }
     if (request->GetResponseMessage().size() > 0) {
         if (request->GetResponseMessageType() == ResponseMessageType::kWarning) {
             generic_response.error_code = kNetErrorWarning;
         }
-        strncpy(generic_response.message, request->GetResponseMessage().c_str(), kMaxMessageSize);
+        strncpy(generic_response.message, request->GetResponseMessage().c_str(), kMaxMessageSize - 1);
+        generic_response.message[kMaxMessageSize - 1] = '\0';
     }
     return generic_response;
 }
@@ -58,10 +57,7 @@ GenericNetworkResponse RequestsDispatcher::CreateResponseToRequest(const std::un
 Error RequestsDispatcher::HandleRequest(const std::unique_ptr<Request>& request) const {
     log__->Debug(RequestLog("got new request", request.get()));
     Error handle_err;
-    handle_err = request->Handle();
-    if (request->GetStatistics()) {
-        statistics__->ApplyTimeFrom(request->GetStatistics());
-    }
+    handle_err = request->Handle(statistics__);
     if (handle_err) {
         if (handle_err == ReceiverErrorTemplates::kReAuthorizationFailure) {
             log__->Warning(LogMessageWithFields(handle_err).Append(RequestLog("", request.get())));
@@ -96,11 +92,10 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request
 std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
     GenericRequestHeader generic_request_header;
-    RequestStatisticsPtr statistics{new RequestStatistics};
-
-    statistics->StartTimer(StatisticEntity::kNetworkIncoming);
+    statistics__->StartTimer(StatisticEntity::kNetwork);
     Error io_err;
-    io__-> Receive(socket_fd_, &generic_request_header, sizeof(GenericRequestHeader), &io_err);
+    io__->Receive(socket_fd_, &generic_request_header,
+                  sizeof(GenericRequestHeader), &io_err);
     if (io_err) {
         *err = ReceiverErrorTemplates::kProcessingError.Generate("cannot get next request",std::move(io_err));
         if ((*err)->GetCause() != GeneralErrorTemplates::kEndOfFile) {
@@ -108,8 +103,8 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
         }
         return nullptr;
     }
-    statistics->StopTimer();
-    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, std::move(statistics), err);
+    statistics__->StopTimer();
+    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, err);
     if (*err) {
         log__->Error(LogMessageWithFields(*err).Append("origin", HostFromUri(producer_uri_)));
     }

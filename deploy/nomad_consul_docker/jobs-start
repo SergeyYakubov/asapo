@@ -7,11 +7,11 @@ if [ ! -f  /var/nomad/token ] && [ "${ACL_ENABLED}" = "true" ]; then
   cat /var/nomad/token
 fi
 
-if [ -f /var/run/asapo/user_vars.tfvars ]; then
-  USER_VAR_FILE="-var-file=/var/run/asapo/user_vars.tfvars"
+if [ -f /var/asapo/user_vars.tfvars ]; then
+  USER_VAR_FILE="-var-file=/var/asapo/user_vars.tfvars"
 fi
 
-cd /var/run/asapo && terraform apply -auto-approve $USER_VAR_FILE "$@"
+cd /var/asapo && terraform apply -auto-approve $USER_VAR_FILE "$@"
 
 if [ "${ACL_ENABLED}" = "true" ]; then
 	cat /var/nomad/token

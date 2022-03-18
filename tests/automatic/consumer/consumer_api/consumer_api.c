@@ -229,8 +229,8 @@ int main(int argc, char* argv[]) {
     AsapoErrorHandle err = asapo_new_handle();
 
     AsapoSourceCredentialsHandle cred = asapo_create_source_credentials(kProcessed,
-                                                                        "auto", "auto",
-                                                                        beamtime, "", "", token);
+                                                                        beamtime,
+                                                                        "", "", token);
     AsapoConsumerHandle consumer = asapo_create_consumer(endpoint,
                                                          ".", 1,
                                                          cred,

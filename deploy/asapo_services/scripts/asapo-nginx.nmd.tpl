@@ -37,8 +37,6 @@ job "asapo-nginx" {
         consul_dns_port = "${consul_dns_port}"
         prometheus_port = "${prometheus_port}"
         alertmanager_port = "${alertmanager_port}"
-        monitoring_ui_port = "${monitoring_ui_port}"
-        monitoring_proxy_port = "${monitoring_proxy_port}"
       }
 
       config {

@@ -25,7 +25,7 @@ Error RequestHandlerKafkaNotify::ProcessRequest(Request* request) const {
 }
 
 StatisticEntity RequestHandlerKafkaNotify::GetStatisticEntity() const {
-    return StatisticEntity::kNetworkOutgoing;
+    return StatisticEntity::kNetwork;
 }
 
 RequestHandlerKafkaNotify::RequestHandlerKafkaNotify(KafkaClient* kafka_client) : kafka_client_{kafka_client} {

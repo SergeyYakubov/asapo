@@ -1,9 +1,9 @@
 package server
 
 import (
-	"asapo_discovery/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"asapo_discovery/common"
 )
 
 func fillSettings(mode string) common.Settings {
@@ -36,13 +36,6 @@ func TestSettingsWrongMode(t *testing.T) {
 func TestSettingsStaticModeNoReceiverEndpoints(t *testing.T) {
 	settings := fillSettings("static")
 	settings.Receiver.StaticEndpoints=[]string{}
-	err := settings.Validate()
-	assert.NotNil(t, err)
-}
-
-func TestSettingsStaticModeNoMonitoringEndpoints(t *testing.T) {
-	settings := fillSettings("static")
-	settings.Broker.StaticEndpoint=""
 	err := settings.Validate()
 	assert.NotNil(t, err)
 }

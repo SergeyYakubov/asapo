@@ -1,0 +1,15 @@
+docker-create-asapo-services-windows-build-env:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: .pre
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/deploy/build_env/services-windows --dockerfile $CI_PROJECT_DIR/deploy/build_env/services-windows/Dockerfile --destination $CI_REGISTRY_IMAGE/asapo-services-windows-build-env:${CI_COMMIT_SHORT_SHA} --destination $CI_REGISTRY_IMAGE/asapo-services-windows-build-env:latest
+  tags:
+    - kubernetes-executor
+  rules:
+    - changes:
+        - deploy/build_env/services-windows/Dockerfile
+      when: always
+    - when: never

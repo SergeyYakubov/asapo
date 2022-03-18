@@ -1,6 +1,4 @@
 #include "rds_tcp_server.h"
-
-#include <utility>
 #include "../receiver_data_server_logger.h"
 #include "../receiver_data_server_error.h"
 
@@ -9,9 +7,9 @@
 
 namespace asapo {
 
-    RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient  monitoring) : io__{GenerateDefaultIO()},
+RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger *logger) : io__{GenerateDefaultIO()},
                                                                                 log__{logger},
-                                                                                address_{std::move(address)}, monitoring_{std::move(monitoring)} {}
+                                                                                address_{std::move(address)} {}
 
 Error RdsTcpServer::Initialize() {
     if (master_socket_ != kDisconnectedSocketDescriptor) {
@@ -30,7 +28,7 @@ Error RdsTcpServer::Initialize() {
     return nullptr;
 }
 
-ListSocketDescriptors RdsTcpServer::GetActiveSockets(Error* err) {
+ListSocketDescriptors RdsTcpServer::GetActiveSockets(Error *err) {
     std::vector<std::string> new_connections;
     auto sockets = io__->WaitSocketsActivity(master_socket_, &sockets_to_listen_, &new_connections, err);
     for (auto &connection: new_connections) {
@@ -46,18 +44,12 @@ void RdsTcpServer::CloseSocket(SocketDescriptor socket) {
     io__->CloseSocket(socket, nullptr);
 }
 
-ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, Error* err) {
+ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, Error *err) {
     GenericRequestHeader header;
-
     Error io_err;
     *err = nullptr;
-
-    RequestStatisticsPtr statistics{new RequestStatistics};
-    statistics->StartTimer(kNetworkIncoming);
-    uint64_t bytesReceived = io__->Receive(socket, &header, sizeof(GenericRequestHeader), &io_err);
-    statistics->StopTimer();
-    statistics->AddIncomingBytes(bytesReceived);
-
+    io__->Receive(socket, &header,
+                  sizeof(GenericRequestHeader), &io_err);
     if (io_err == GeneralErrorTemplates::kEndOfFile) {
         *err = std::move(io_err);
         CloseSocket(socket);
@@ -67,12 +59,12 @@ ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, 
         (*err)->AddDetails("origin",io__->AddressFromSocket(socket));
         return nullptr;
     }
-    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket, std::move(statistics)}};
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket}};
 }
 
-GenericRequests RdsTcpServer::ReadRequests(const ListSocketDescriptors& sockets) {
+GenericRequests RdsTcpServer::ReadRequests(const ListSocketDescriptors &sockets) {
     GenericRequests requests;
-    for (auto client : sockets) {
+    for (auto client: sockets) {
         Error err;
         auto request = ReadRequest(client, &err);
         if (err) {
@@ -86,7 +78,7 @@ GenericRequests RdsTcpServer::ReadRequests(const ListSocketDescriptors& sockets)
     return requests;
 }
 
-GenericRequests RdsTcpServer::GetNewRequests(Error* err) {
+GenericRequests RdsTcpServer::GetNewRequests(Error *err) {
     auto sockets = GetActiveSockets(err);
     if (*err) {
         return {};
@@ -97,7 +89,7 @@ GenericRequests RdsTcpServer::GetNewRequests(Error* err) {
 
 RdsTcpServer::~RdsTcpServer() {
     if (!io__) return; // need for test that override io__ to run
-    for (auto client : sockets_to_listen_) {
+    for (auto client: sockets_to_listen_) {
         io__->CloseSocket(client, nullptr);
     }
     io__->CloseSocket(master_socket_, nullptr);
@@ -134,10 +126,6 @@ RdsTcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest *request, 
         err->AddDetails("origin",io__->AddressFromSocket(socket));
     }
     return err;
-}
-
-SharedReceiverMonitoringClient RdsTcpServer::Monitoring() {
-    return monitoring_;
 }
 
 }

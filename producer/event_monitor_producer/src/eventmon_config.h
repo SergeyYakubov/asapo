@@ -20,8 +20,6 @@ struct EventMonConfig {
     LogLevel log_level = LogLevel::Info;
     std::string tag;
     uint64_t nthreads = 1;
-    std::string instance_id;
-    std::string pipeline_step = "filemon";
     std::string beamtime_id;
     RequestHandlerType mode = RequestHandlerType::kTcp;
     std::string root_monitored_folder;

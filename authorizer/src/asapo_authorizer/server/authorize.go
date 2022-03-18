@@ -17,10 +17,6 @@ type SourceCredentials struct {
 	DataSource string
 	Token      string
 	Type       string
-
-	// Optional
-	InstanceId   string `json:",omitempty"`
-	PipelineStep string `json:",omitempty"`
 }
 
 type authorizationRequest struct {
@@ -29,27 +25,15 @@ type authorizationRequest struct {
 }
 
 func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
+
 	vals := strings.Split(request.SourceCredentials, "%")
 	nvals := len(vals)
-	if nvals < 7 {
+	if nvals < 5 {
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
 
-	var creds SourceCredentials
-
-	creds = SourceCredentials{
-		Type:       vals[0],
-		InstanceId: vals[1], PipelineStep: vals[2],
-		BeamtimeId: vals[3], Beamline: vals[4], Token: vals[nvals-1]}
-	creds.DataSource = strings.Join(vals[5:nvals-1], "%")
-	if creds.InstanceId == "" {
-		creds.InstanceId = "auto"
-	}
-
-	if creds.PipelineStep == "" {
-		creds.PipelineStep = "auto"
-	}
-
+	creds := SourceCredentials{Type: vals[0], BeamtimeId: vals[1], Beamline: vals[2], Token: vals[nvals-1]}
+	creds.DataSource = strings.Join(vals[3:nvals-1], "%")
 	if creds.DataSource == "" {
 		creds.DataSource = "detector"
 	}
@@ -60,15 +44,6 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 
 	if creds.BeamtimeId == "" {
 		creds.BeamtimeId = "auto"
-	}
-
-	log.WithFields(map[string]interface{}{
-		"creds":    request.SourceCredentials,
-	}).Debug("received credentials")
-
-
-	if creds.InstanceId == "auto" || creds.PipelineStep == "auto" {
-		return SourceCredentials{}, errors.New("InstanceId and PipelineStep must be already set on client side")
 	}
 
 	if creds.BeamtimeId == "auto" && creds.Beamline == "auto" {
@@ -115,7 +90,7 @@ func beamtimeMetaFromMatch(match string) (common.BeamtimeMeta, error) {
 	var bt common.BeamtimeMeta
 	ignoredFoldersAfterGpfs := []string{"common", "BeamtimeUsers", "state", "support"}
 	if utils.StringInSlice(vars[2], ignoredFoldersAfterGpfs) {
-		return common.BeamtimeMeta{}, errors.New("skipped folder")
+		return common.BeamtimeMeta{}, errors.New("skipped fodler")
 	}
 
 	bt.OfflinePath = common.Settings.RootBeamtimesFolder + string(filepath.Separator) + match
@@ -203,11 +178,9 @@ func findBeamtimeMetaFromBeamline(beamline string, iscommissioning bool) (meta c
 func alwaysAllowed(creds SourceCredentials) (common.BeamtimeMeta, bool) {
 	for _, pair := range common.Settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
-			pair.InstanceId = creds.InstanceId
-			pair.PipelineStep = creds.PipelineStep
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
-			pair.AccessTypes = []string{"read", "write", "writeraw"}
+			pair.AccessTypes = []string{"read", "write","writeraw"}
 			return pair, true
 		}
 	}
@@ -305,8 +278,6 @@ func findMeta(creds SourceCredentials) (common.BeamtimeMeta, error) {
 		return common.BeamtimeMeta{}, err
 	}
 
-	meta.InstanceId = creds.InstanceId
-	meta.PipelineStep = creds.PipelineStep
 	meta.DataSource = creds.DataSource
 	meta.Type = creds.Type
 
@@ -360,12 +331,12 @@ func authorize(request authorizationRequest, creds SourceCredentials) (common.Be
 
 	meta.AccessTypes = accessTypes
 	log.WithFields(map[string]interface{}{
-		"beamline":    creds.Beamline,
-		"beamtime":    creds.BeamtimeId,
-		"origin":      request.OriginHost,
-		"type":        meta.Type,
-		"onlinePath":  meta.OnlinePath,
-		"offlinePath": meta.OfflinePath,
+		"beamline":creds.Beamline,
+		"beamtime":creds.BeamtimeId,
+		"origin":request.OriginHost,
+		"type":meta.Type,
+		"onlinePath":meta.OnlinePath,
+		"offlinePath":meta.OfflinePath,
 	}).Debug("authorized credentials")
 	return meta, nil
 }

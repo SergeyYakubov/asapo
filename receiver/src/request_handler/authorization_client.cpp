@@ -4,8 +4,6 @@
 
 #include "asapo/json_parser/json_parser.h"
 
-#include "asapo/common/internal/version.h"
-
 #include "../receiver_config.h"
 #include "../receiver_logger.h"
 #include "../request.h"
@@ -13,18 +11,8 @@
 namespace asapo {
 
 std::string GetRequestString(const Request *request, const std::string &source_credentials) {
-    auto api_version = VersionToNumber(request->GetApiVersion());
-    std::string request_string;
-    if (api_version < 6) {         // old approach, need to add instanceId and step, deprecates 01.03.2023
-        std::string updated_source_credentials_prefix = source_credentials;
-        std::string uri = request->GetOriginUri();
-        updated_source_credentials_prefix.insert(source_credentials.find("%")+1,uri+"%DefaultStep%");
-        request_string = std::string("{\"SourceCredentials\":\"") +
-            updated_source_credentials_prefix + "\",\"OriginHost\":\"" + uri + "\"}";
-    } else {
-        request_string = std::string("{\"SourceCredentials\":\"") +
-            source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
-    }
+    std::string request_string = std::string("{\"SourceCredentials\":\"") +
+        source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
     return request_string;
 }
 
@@ -81,8 +69,6 @@ Error ParseServerResponse(const std::string &response,
         (err = parser.GetString("source-type", &stype)) ||
         (err = parser.GetArrayString("access-types", access_types)) ||
         (err = GetSourceTypeFromString(stype, &data->source_type)) ||
-        (err = parser.GetString("instanceId", &data->producer_instance_id)) ||
-        (err = parser.GetString("pipelineStep", &data->pipeline_step_id)) ||
         (err = parser.GetString("beamline", &data->beamline));
     if (err) {
         return ErrorFromAuthorizationServerResponse(std::move(err), response, code);

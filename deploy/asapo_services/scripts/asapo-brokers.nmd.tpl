@@ -29,9 +29,15 @@ job "asapo-brokers" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "${docker_repository}/asapo-broker${image_suffix}"
+        image = "${image_registry}/asapo-broker${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/broker/config.json"]
+        %{ if image_registry_username != "" }
+        auth {
+            username = "${image_registry_username}"
+            password = "${image_registry_password}"
+        }
+        %{endif}
         %{ if ! nomad_logs  }
           logging {
           type = "fluentd"

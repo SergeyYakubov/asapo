@@ -34,13 +34,11 @@ int main(int argc, char* argv[]) {
 
     auto credentials = asapo::SourceCredentials
             {
-                "test_producer_instance", //   # producer instance id (can be "auto")
-                "pipeline_step_1",        //   # pipeline step id
                 asapo::SourceType::kProcessed, // should be kProcessed or kRaw, kProcessed writes to the core FS
                 beamtime,                      // the folder should exist
                 "",                            // can be empty or "auto", if beamtime_id is given
                 "test_source",                 // source
-                ""                             // authorization token
+                ""                             // athorization token
             };
 
     auto producer = asapo::Producer::Create(endpoint,

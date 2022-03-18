@@ -79,7 +79,6 @@ TEST_F(StatisticTests, AddTag) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.tags.size(), Eq(1));
     ASSERT_THAT(stat.tags[0].first, Eq("name"));
     ASSERT_THAT(stat.tags[0].second, Eq("value"));
 
@@ -91,7 +90,6 @@ TEST_F(StatisticTests, AddTagTwice) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.tags.size(), Eq(2));
     ASSERT_THAT(stat.tags[0].first, Eq("name1"));
     ASSERT_THAT(stat.tags[0].second, Eq("value1"));
     ASSERT_THAT(stat.tags[1].first, Eq("name2"));

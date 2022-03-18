@@ -42,8 +42,6 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     uint64_t expected_size
     MessageMetas content
   struct  SourceCredentials:
-    string instance_id
-    string pipeline_step
     string beamtime_id
     string data_source
     string user_token
@@ -70,7 +68,6 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         Consumer() except +
         void SetTimeout(uint64_t timeout_ms)
         void ForceNoRdma()
-        Error DisableMonitoring(bool enabled)
         NetworkConnectionType CurrentConnectionType()
         Error GetNext(string group_id, MessageMeta* info, MessageData* data,string stream)
         Error GetLast(MessageMeta* info, MessageData* data, string stream)
@@ -115,7 +112,6 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   ErrorTemplateInterface kWrongInput "asapo::ConsumerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kPartialData "asapo::ConsumerErrorTemplates::kPartialData"
   ErrorTemplateInterface kUnsupportedClient "asapo::ConsumerErrorTemplates::kUnsupportedClient"
-  ErrorTemplateInterface kDataNotInCache "asapo::ConsumerErrorTemplates::kDataNotInCache"
 
 
   cdef cppclass ConsumerErrorData:

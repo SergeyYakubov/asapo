@@ -9,7 +9,7 @@ Producer client (or producer) is a part of a distributed streaming system that i
 Producer API is available for C++ and Python and has the following main functionality:
 
 - Create a producer instance and bind it to a specific beamtime and data source
-multiple instances can be created (also within a single application) to send data from different sources. An instance id and pipeline step id can be set to allow pipeline monitoring.
+multiple instances can be created (also within a single application) to send data from different sources
 - Send messages to a specific stream (you can read more [here](data-in-asapo) about data in ASAPO)
     - each message must have a consecutive integer index, ASAPO does not create indexes automatically
     - to compose datasets, dataset substream (and dataset size) should be send along with each message

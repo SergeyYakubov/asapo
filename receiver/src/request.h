@@ -12,7 +12,6 @@
 #include "data_cache.h"
 
 #include "asapo/preprocessor/definitions.h"
-#include "statistics/instanced_statistics_provider.h"
 #include "asapo/logger/logger.h"
 
 namespace asapo {
@@ -28,12 +27,11 @@ class RequestHandlerDbCheckRequest;
 
 class Request {
   public:
-    ASAPO_VIRTUAL Error Handle();
+    ASAPO_VIRTUAL Error Handle(ReceiverStatistics*);
     ASAPO_VIRTUAL ~Request() = default;
     Request() = delete;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
-            DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler,
-            RequestStatisticsPtr  statistics);
+            DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler);
     ASAPO_VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     ASAPO_VIRTUAL const RequestHandlerList& GetListHandlers() const;
     ASAPO_VIRTUAL uint64_t GetDataSize() const;
@@ -45,11 +43,7 @@ class Request {
     ASAPO_VIRTUAL void* GetData() const;
     ASAPO_VIRTUAL Opcode GetOpCode() const;
     ASAPO_VIRTUAL const char* GetMessage() const;
-    ASAPO_VIRTUAL uint64_t GetIngestMode() const;
-    ASAPO_VIRTUAL const std::string& GetProducerInstanceId() const;
-    ASAPO_VIRTUAL void SetProducerInstanceId(std::string producer_instance_id);
-    ASAPO_VIRTUAL const std::string& GetPipelineStepId() const;
-    ASAPO_VIRTUAL void SetPipelineStepId(std::string pipeline_step_id);
+
     ASAPO_VIRTUAL const std::string& GetOriginUri() const;
     ASAPO_VIRTUAL const std::string& GetOriginHost() const;
     ASAPO_VIRTUAL const std::string& GetMetaData() const;
@@ -83,20 +77,15 @@ class Request {
     ASAPO_VIRTUAL ResponseMessageType GetResponseMessageType() const;
     ASAPO_VIRTUAL const std::string& GetResponseMessage() const;
     ASAPO_VIRTUAL Error CheckForDuplicates();
-    ASAPO_VIRTUAL RequestStatistics* GetStatistics();
     const AbstractLogger* log__;
  private:
     Error PrepareDataBufferFromMemory();
     Error PrepareDataBufferFromCache();
-  private:
-    RequestStatisticsPtr statistics_;
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     MessageData data_buffer_;
     void* data_ptr;
     RequestHandlerList handlers_;
-    std::string producer_instance_id_;
-    std::string pipeline_step_id_;
     std::string origin_uri_;
     std::string origin_host_;
     std::string beamtime_id_;

@@ -19,19 +19,7 @@ Cleanup() {
     echo cleanup
     rm -rf out /tmp/asapo/asap3 /tmp/asapo/beamline
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-
-    set +e
-    influx_out=`influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"`
-    influx_status=$?
-    echo "Influx output: ${influx_out}"
-    if [ $influx_status -ne 0 ]; then
-        if [[ $influx_out == *"401"* ]]; then
-            echo "Ignoring auth error from influxdb"
-        else
-            echo "influxdb failed to delete test database '${monitor_database_name}'"
-            exit $influx_status
-        fi
-    fi
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
 }
 
 echo "db.dropDatabase()" | mongo ${beamtime_id}_detector

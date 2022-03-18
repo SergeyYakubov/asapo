@@ -53,7 +53,7 @@ class WriteFileProcessorTests : public Test {
         asapo::ReceiverConfig test_config;
         asapo::SetReceiverConfig(test_config, "none");
         processor.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr, nullptr});
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr});
         processor.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
 

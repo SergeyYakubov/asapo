@@ -12,17 +12,10 @@ RUN ./install_cmake.sh
 ADD install_curl.sh install_curl.sh
 RUN ./install_curl.sh /curl
 
-RUN yum -y install autoconf libtool
+RUN yum -y install autoconf libtool libibverbs librdmacm librdmacm-devel
 
 ADD install_libfabric.sh install_libfabric.sh
 RUN ./install_libfabric.sh
-
-# TODO: Currently unable to build gRPC, since the C++ version in centos 7 is too old.
-# The oldest version in centos repo is 1.20.1 from 2019
-# https://cbs.centos.org/koji/packageinfo?packageID=7380
-# Currently the consumer and producer dont need gRPC
-#ADD install_grpc.sh install_grpc.sh
-#RUN ./install_grpc.sh
 
 RUN yum -y install mc libcurl-devel
 

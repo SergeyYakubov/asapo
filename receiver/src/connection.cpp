@@ -1,5 +1,4 @@
 #include <cstring>
-#include <utility>
 #include <assert.h>
 #include "connection.h"
 #include "receiver_error.h"
@@ -9,16 +8,16 @@
 
 namespace asapo {
 
-Connection::Connection(SocketDescriptor socket_fd, const std::string& address,SharedReceiverMonitoringClient monitoring,
+Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
                        SharedCache cache, KafkaClient* kafkaClient, std::string receiver_tag) :
     io__{GenerateDefaultIO()},
     statistics__{new ReceiverStatistics},
              log__{GetDefaultReceiverLogger()},
-requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(),std::move(monitoring), cache,kafkaClient}} {
+requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache, kafkaClient}} {
     socket_fd_ = socket_fd;
     address_ = address;
     statistics__->AddTag("connection_from", address);
-    statistics__->AddTag("receiver_tag", receiver_tag);
+    statistics__->AddTag("receiver_tag", std::move(receiver_tag));
 }
 
 void Connection::ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept {

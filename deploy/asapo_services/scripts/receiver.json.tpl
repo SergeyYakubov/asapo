@@ -1,7 +1,6 @@
 {
-  "MonitorPerformance": {{ env "NOMAD_META_perf_monitor" }},
-  "MonitoringServer": "auto",
   "PerformanceDbServer":"localhost:8400/influxdb",
+  "MonitorPerformance": {{ env "NOMAD_META_perf_monitor" }},
   "PerformanceDbName": "asapo_receivers",
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/asapo-discovery",

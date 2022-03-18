@@ -8,7 +8,7 @@ namespace asapo {
 
 class NetClient {
   public:
-    virtual Error GetData(const MessageMeta* info, const std::string& request_sender_details, MessageData* data) = 0;
+    virtual Error GetData(const MessageMeta* info, MessageData* data) = 0;
     virtual ~NetClient() = default;
 
 };

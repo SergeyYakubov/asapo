@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
                 beamtime,                      // the folder should exist
                 "",                            // can be empty or "auto", if beamtime_id is given
                 "test_source",                 // source
-                ""                             // authorization token
+                ""                             // athorization token
             };
 
     auto producer = asapo::Producer::Create(endpoint,

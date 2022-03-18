@@ -18,11 +18,18 @@ job "asapo-services" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "${docker_repository}/asapo-authorizer${image_suffix}"
+        image = "${image_registry}/asapo-authorizer${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/authorizer/config.json",
                            "${offline_dir}:${offline_dir}",
                            "${online_dir}:${online_dir}"]
+
+        %{ if image_registry_username != "" }
+        auth {
+            username = "${image_registry_username}"
+            password = "${image_registry_password}"
+        }
+        %{endif}
 
 	%{ if ! nomad_logs }
         logging {
@@ -96,9 +103,15 @@ job "asapo-services" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "${docker_repository}/asapo-discovery${image_suffix}"
+        image = "${image_registry}/asapo-discovery${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
+        %{ if image_registry_username != "" }
+        auth {
+            username = "${image_registry_username}"
+            password = "${image_registry_password}"
+        }
+        %{endif}
         %{ if ! nomad_logs  }
         logging {
         type = "fluentd"

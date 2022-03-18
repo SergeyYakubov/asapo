@@ -10,14 +10,14 @@ namespace asapo {
 class TcpConsumerClient : public NetClient {
   public:
     explicit TcpConsumerClient();
-    Error GetData(const MessageMeta* info,  const std::string& request_sender_details, MessageData* data) override;
+    Error GetData(const MessageMeta* info, MessageData* data) override;
     std::unique_ptr<IO> io__;
     std::unique_ptr<TcpConnectionPool> connection_pool__;
   private:
-    Error SendGetDataRequest(SocketDescriptor sd, const std::string& request_sender_details, const MessageMeta* info) const noexcept;
-    Error ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const std::string& request_sender_details, const MessageMeta* info) const noexcept;
+    Error SendGetDataRequest(SocketDescriptor sd, const MessageMeta* info) const noexcept;
+    Error ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const MessageMeta* info) const noexcept;
     Error ReceiveResponce(SocketDescriptor sd) const noexcept;
-    Error QueryCacheHasData(SocketDescriptor* sd, const std::string& request_sender_details, const MessageMeta* info, bool try_reconnect) const noexcept;
+    Error QueryCacheHasData(SocketDescriptor* sd, const MessageMeta* info, bool try_reconnect) const noexcept;
     Error ReceiveData(SocketDescriptor sd, const MessageMeta* info, MessageData* data) const noexcept;
 };
 

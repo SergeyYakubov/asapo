@@ -11,12 +11,11 @@ TcpConsumerClient::TcpConsumerClient() : io__{GenerateDefaultIO()}, connection_p
 }
 
 
-Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const std::string& request_sender_details, const MessageMeta* info) const noexcept {
+Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const MessageMeta* info) const noexcept {
     Error err;
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
-
-    strncpy(request_header.stream, request_sender_details.c_str(), kMaxMessageSize);
-    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
+    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize - 1);
+    request_header.api_version[kMaxVersionSize - 1] = '\0';
     io__->Send(sd, &request_header, sizeof(request_header), &err);
     if (err) {
         connection_pool__->ReleaseConnection(sd);
@@ -25,14 +24,14 @@ Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const std::stri
     return err;
 }
 
-Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const std::string& request_sender_details,
+Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd,
         const MessageMeta* info) const noexcept {
     Error err;
     *sd = connection_pool__->Reconnect(*sd, &err);
     if (err) {
         return err;
     } else {
-        return SendGetDataRequest(*sd, request_sender_details, info);
+        return SendGetDataRequest(*sd, info);
     }
 }
 
@@ -66,12 +65,12 @@ Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     return nullptr;
 }
 
-Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const std::string& request_sender_details, const MessageMeta* info,
+Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const MessageMeta* info,
                                            bool try_reconnect) const noexcept {
     Error err;
-    err = SendGetDataRequest(*sd, request_sender_details, info);
+    err = SendGetDataRequest(*sd, info);
     if (err && try_reconnect) {
-        err = ReconnectAndResendGetDataRequest(sd, request_sender_details, info);
+        err = ReconnectAndResendGetDataRequest(sd, info);
     }
     if (err) {
         return err;
@@ -100,7 +99,7 @@ Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const MessageMeta* inf
     return err;
 }
 
-Error TcpConsumerClient::GetData(const MessageMeta* info, const std::string& request_sender_details, MessageData* data) {
+Error TcpConsumerClient::GetData(const MessageMeta* info, MessageData* data) {
     Error err;
     bool reused;
     auto sd = connection_pool__->GetFreeConnection(info->source, &reused, &err);
@@ -108,7 +107,7 @@ Error TcpConsumerClient::GetData(const MessageMeta* info, const std::string& req
         return err;
     }
 
-    err = QueryCacheHasData(&sd, request_sender_details, info, reused);
+    err = QueryCacheHasData(&sd, info, reused);
     if (err) {
         return err;
     }

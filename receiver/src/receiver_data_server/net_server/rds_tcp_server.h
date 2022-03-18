@@ -11,7 +11,7 @@ const int kMaxPendingConnections = 5;
 
 class RdsTcpServer : public RdsNetServer {
   public:
-    explicit RdsTcpServer(std::string address, const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient monitoring);
+    explicit RdsTcpServer(std::string address, const AbstractLogger* logger);
     ~RdsTcpServer() override;
 
     Error Initialize() override;
@@ -22,9 +22,6 @@ class RdsTcpServer : public RdsNetServer {
     Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
                                   const CacheMeta* cache_slot) override;
     void HandleAfterError(uint64_t source_id) override;
-
-    SharedReceiverMonitoringClient Monitoring() override;
-
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
   private:
@@ -35,7 +32,6 @@ class RdsTcpServer : public RdsNetServer {
     SocketDescriptor master_socket_{kDisconnectedSocketDescriptor};
     ListSocketDescriptors sockets_to_listen_;
     std::string address_;
-    asapo::SharedReceiverMonitoringClient monitoring_;
 };
 
 }

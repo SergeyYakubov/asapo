@@ -66,7 +66,6 @@ int ProcessError(const Error& err) {
 ConsumerPtr CreateConsumerAndGroup(const Args& args, Error* err) {
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server, args.file_path, true,
                     asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                             "auto", "auto",
                                              args.beamtime_id, "",
                                              args.stream_in,
                                              args.token}, err);
@@ -194,8 +193,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.server, args.nthreads,
                                             asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                        "auto", "auto", args.beamtime_id,
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed, args.beamtime_id,
                                                     "", args.stream_out, args.token}, 60000, &err);
     if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;

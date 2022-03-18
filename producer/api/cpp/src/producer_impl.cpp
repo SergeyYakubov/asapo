@@ -11,7 +11,6 @@
 #include "asapo/request/request_pool_error.h"
 #include "asapo/http_client/http_client.h"
 #include "asapo/common/internal/version.h"
-#include <asapo/io/io_factory.h>
 
 namespace asapo {
 
@@ -19,7 +18,7 @@ const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type) :
-                           log__{GetDefaultProducerLogger()}, io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms}, endpoint_{endpoint} {
+    log__{GetDefaultProducerLogger()}, httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms}, endpoint_{endpoint} {
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint,
@@ -31,7 +30,6 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
         break;
     }
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
-
 }
 
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
@@ -190,10 +188,9 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
 
     err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-                source_cred_string_,
-                std::move(request_header), std::move(data), std::move(message_header.user_metadata),
-                std::move(full_path), callback,
-                manage_data_memory, timeout_ms_}
+            source_cred_string_, std::move(request_header),
+            std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback,
+            manage_data_memory, timeout_ms_}
     });
 
     return HandleErrorFromPool(std::move(err), manage_data_memory);
@@ -253,25 +250,10 @@ void ProducerImpl::EnableRemoteLog(bool enable) {
 }
 
 Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
+
     if (!source_cred_string_.empty()) {
         log__->Error("credentials already set");
         return ProducerErrorTemplates::kWrongInput.Generate("credentials already set");
-    }
-
-    Error err = RefreshSourceCredentialString(source_cred);
-    if (!err) {
-        last_creds_.reset(new SourceCredentials{source_cred});
-    }
-    return err;
-}
-
-Error ProducerImpl::RefreshSourceCredentialString(SourceCredentials source_cred) {
-    if (source_cred.instance_id.empty()) {
-        source_cred.instance_id = SourceCredentials::kDefaultInstanceId;
-    }
-
-    if (source_cred.pipeline_step.empty()) {
-        source_cred.pipeline_step = SourceCredentials::kDefaultPipelineStep;
     }
 
     if (source_cred.data_source.empty()) {
@@ -287,28 +269,18 @@ Error ProducerImpl::RefreshSourceCredentialString(SourceCredentials source_cred)
     }
 
     if (source_cred.beamtime_id == SourceCredentials::kDefaultBeamtimeId
-    && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
+            && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
         log__->Error("beamtime or beamline should be set");
         source_cred_string_ = "";
         return ProducerErrorTemplates::kWrongInput.Generate("beamtime or beamline should be set");
     }
 
-    if (source_cred.instance_id == SourceCredentials::kDefaultInstanceId) {
-        Error err;
-        std::string hostname = io__->GetHostName(&err);
-
-        if (err) {
-            hostname = "hostnameerror";
-        }
-
-        source_cred.instance_id = hostname + "_" + std::to_string(io__->GetCurrentPid());
-    }
-
-    if (source_cred.pipeline_step == SourceCredentials::kDefaultPipelineStep) {
-        source_cred.pipeline_step = "DefaultStep";
-    }
-
     source_cred_string_ = source_cred.GetString();
+    if (source_cred_string_.size() + source_cred.user_token.size() > kMaxMessageSize) {
+        log__->Error("credentials string is too long - " + source_cred_string_);
+        source_cred_string_ = "";
+        return ProducerErrorTemplates::kWrongInput.Generate("credentials string is too long");
+    }
 
     return nullptr;
 }
@@ -425,12 +397,12 @@ std::string ProducerImpl::BlockingRequest(GenericRequestHeader header, uint64_t 
 
     *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-                source_cred_string_, std::move(header),
-                nullptr, "", "",
-                unwrap_callback(
+            source_cred_string_, std::move(header),
+            nullptr, "", "",
+            unwrap_callback(
                 ActivatePromiseForReceiverResponse,
                 std::move(promise)), true,
-                timeout_ms}
+            timeout_ms}
     }, true);
     if (*err) {
         return "";
@@ -519,7 +491,7 @@ Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
 }
 
 Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const {
-    auto header = GenericRequestHeader{kOpcodeDeleteStream, 0, 0, 0, "", stream};
+    GenericRequestHeader header{kOpcodeDeleteStream, 0, 0, 0, "", stream};
     header.custom_data[0] = options.Encode();
 
     Error err;
@@ -570,7 +542,7 @@ std::string ProducerImpl::GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const
 }
 
 std::string ProducerImpl::GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const {
-    auto header =  GenericRequestHeader{kOpcodeGetMeta, 0, 0, 0, "", stream};
+    GenericRequestHeader header{kOpcodeGetMeta, 0, 0, 0, "", stream};
     auto response = BlockingRequest(std::move(header), timeout_ms, err);
     if (*err) {
         return "";

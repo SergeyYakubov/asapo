@@ -34,11 +34,17 @@ job "asapo-receivers" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
 	    privileged = true
-        image = "${docker_repository}/asapo-receiver${image_suffix}"
+        image = "${image_registry}/asapo-receiver${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/receiver/config.json",
                    "${offline_dir}:${offline_dir}",
                    "${online_dir}:${online_dir}"]
+        %{ if image_registry_username != "" }
+        auth {
+            username = "${image_registry_username}"
+            password = "${image_registry_password}"
+        }
+        %{endif}
         %{ if ! nomad_logs  }
         logging {
         type = "fluentd"

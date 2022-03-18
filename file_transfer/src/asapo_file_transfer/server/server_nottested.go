@@ -8,20 +8,12 @@ import (
 	"asapo_common/version"
 	"errors"
 	"net/http"
-	_ "net/http/pprof"
 	"strconv"
+	_ "net/http/pprof"
+
 )
 
-func StartMonitoring() {
-	monitoring.Sender = new(gRPCBrokerMonitoringDataSender)
-	monitoring.Init()
-	go monitoring.RunThread()
-}
-
 func Start() {
-	if settings.MonitorPerformance {
-		StartMonitoring()
-	}
 	mux := utils.NewRouter(listRoutes)
 	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))

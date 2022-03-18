@@ -6,7 +6,6 @@ import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"asapo_common/version"
-	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
@@ -23,10 +22,7 @@ func readFromMapUnescaped(key string, vars map[string]string) (val string,ok boo
 	return
 }
 
-func extractRequestParameters(r *http.Request, needGroupID bool) (
-	string/*instanceid*/, string/*pipelinestep*/,
-	string/*beamtime*/, string/*datasource*/, string /*stream*/, string /*groupid*/, bool, /*was okay*/
-	) {
+func extractRequestParameters(r *http.Request, needGroupID bool) (string, string, string, string, bool) {
 	vars := mux.Vars(r)
 	db_name, ok1 := vars["beamtime"]
 	datasource, ok3 := readFromMapUnescaped("datasource",vars)
@@ -38,12 +34,8 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (
 		group_id, ok2 = readFromMapUnescaped("groupid",vars)
 	}
 
-	instanceid := r.URL.Query().Get("instanceid")
-	pipelinestep := r.URL.Query().Get("pipelinestep")
 
-	allParametersAreOk := ok1 && ok2 && ok3 && ok4
-
-	return instanceid, pipelinestep, db_name, datasource, stream, group_id, allParametersAreOk
+	return db_name, datasource, stream, group_id, ok1 && ok2 && ok3 && ok4
 }
 
 func IsLetterOrNumbers(s string) bool {
@@ -71,20 +63,20 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	consumerInstanceId, pipelineStepId, beamtimeId, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
+	beamtime, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
 		log.WithFields(map[string]interface{}{"request":r.RequestURI}).Error("cannot extract request parameters")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if err := authorize(r, beamtimeId, needWriteAccess(op)); err != nil {
-		writeAuthAnswer(w, "get "+op, beamtimeId, err)
+	if err := authorize(r, beamtime, needWriteAccess(op)); err != nil {
+		writeAuthAnswer(w, "get "+op, beamtime, err)
 		return
 	}
 
 	request := database.Request{}
-	request.Beamtime = beamtimeId
+	request.Beamtime = beamtime
 	request.DataSource = datasource
 	request.Op = op
 	request.ExtraParam = extra_param
@@ -99,32 +91,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	rlog.Debug("got request")
 	answer, code := processRequestInDb(request,rlog)
 	w.WriteHeader(code)
-	_, err := w.Write(answer)
-
-	type SizeStruct struct {
-		Size uint64 `bson:"size" json:"size"`
-	}
-
-	if err == nil && code == 200 && len(consumerInstanceId) > 0 && len(pipelineStepId) > 0 {
-		var sized SizeStruct
-		err = json.Unmarshal(answer, &sized)
-		if err == nil {
-			switch op {
-			case "next": fallthrough
-			case "id": fallthrough
-			case "last":
-				monitoring.SendBrokerRequest(
-					consumerInstanceId,
-					pipelineStepId,
-					op,
-					beamtimeId,
-					datasource,
-					stream,
-					sized.Size,
-				)
-			}
-		}
-	}
+	w.Write(answer)
 }
 
 func returnError(err error, rlog logger.Logger) (answer []byte, code int) {
@@ -149,6 +116,8 @@ func reconnectIfNeeded(db_error error) {
 		log.WithFields(map[string]interface{}{"address":settings.GetDatabaseServer()}).Debug("reconnected to database")
 	}
 }
+
+
 
 func processRequestInDb(request database.Request,rlog logger.Logger) (answer []byte, code int) {
 	statistics.IncreaseCounter()

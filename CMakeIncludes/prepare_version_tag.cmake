@@ -3,6 +3,35 @@ function(cleanup varname)
     SET(${varname} ${out} PARENT_SCOPE)
 endfunction()
 
+if (DEFINED ENV{CI_COMMIT_REF_NAME})
+    # this is gitlab CI
+    if (DEFINED ENV{CI_COMMIT_TAG})
+        # both refname and tag are defined - this is a tagged build
+        SET(ASAPO_VERSION $ENV{CI_COMMIT_TAG})
+        SET(PYTHON_ASAPO_VERSION ${ASAPO_VERSION})
+        SET(ASAPO_VERSION_COMMIT "")
+        SET(ASAPO_VERSION_DOCKER_SUFFIX "")
+    else ()
+        # tag is not defined, this is the developer build
+        SET(ASAPO_VERSION $ENV{CI_COMMIT_REF_NAME})
+        string(REPLACE "_" "-" ASAPO_VERSION ${ASAPO_VERSION})
+        SET(ASAPO_VERSION 100.0.${ASAPO_VERSION})
+        SET(PYTHON_ASAPO_VERSION 100.0.dev1)
+        SET(ASAPO_VERSION_COMMIT ", build $ENV{CI_COMMIT_SHORT_SHA}")
+        SET(ASAPO_VERSION_DOCKER_SUFFIX "-dev")
+    endif ()
+
+    SET(ASAPO_VERSION_DOCKER_REGISTRY $ENV{CI_REGISTRY_IMAGE})
+    SET(ASAPO_VERSION_DOCKER_REGISTRY_USERNAME $ENV{CI_REGISTRY_IMAGE_USERNAME})
+    SET(ASAPO_VERSION_DOCKER_REGISTRY_PASSWORD $ENV{CI_REGISTRY_IMAGE_PASSWORD})
+    SET(ASAPO_VERSION_DOCKER_TAG $ENV{CI_COMMIT_SHORT_SHA})
+
+    message("Asapo Version: " ${ASAPO_VERSION})
+    message("Python Asapo Version: " ${PYTHON_ASAPO_VERSION})
+    message("Asapo commit: " ${ASAPO_VERSION_COMMIT})
+    return ()
+endif ()
+
 execute_process(COMMAND git describe --tags --abbrev=0
         OUTPUT_VARIABLE ASAPO_TAG
         WORKING_DIRECTORY ..)
@@ -51,6 +80,11 @@ else ()
     endif ()
     SET(ASAPO_WHEEL_VERSION ${ASAPO_VERSION})
 endif ()
+
+SET(ASAPO_VERSION_DOCKER_REGISTRY yakser)
+SET(ASAPO_VERSION_DOCKER_REGISTRY_USERNAME "")
+SET(ASAPO_VERSION_DOCKER_REGISTRY_PASSWORD "")
+SET(ASAPO_VERSION_DOCKER_TAG ${ASAPO_VERSION})
 
 message("Asapo Version: " ${ASAPO_VERSION})
 message("Python Asapo Version: " ${PYTHON_ASAPO_VERSION})

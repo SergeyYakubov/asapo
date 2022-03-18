@@ -1,0 +1,108 @@
+include:
+  - local: deploy/build_env/services-linux/gitlab-ci-build-docker.yml
+  - local: deploy/build_env/services-windows/gitlab-ci-build-docker.yml
+
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
+build-services-linux-debug:
+  extends: .go-cache
+  image:
+    name: $CI_REGISTRY_IMAGE/asapo-services-linux-build-env:latest
+    entrypoint: [""]
+  stage: build
+  script:
+    - mkdir $CI_PROJECT_DIR/build
+    - cd $CI_PROJECT_DIR/build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DBUILD_INTEGRATION_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_CONSUMER_TOOLS=ON -DENABLE_LIBFABRIC=ON -DENABLE_LIBFABRIC_LOCALHOST=ON -DBUILD_EVENT_MONITOR_PRODUCER=ON -DSTOP_BUILD_ON_WARNINGS=ON ..
+    - make -j 4
+  tags:
+    - kubernetes-executor
+  rules:
+    - when: never
+  artifacts:
+    paths:
+      - build
+    exclude:
+      - build/**/CMakeFiles/**/*.o
+      - build/**/CMakeFiles/**/*.gcno
+      - build/**/CMakeFiles/**/*.gcda
+      - build/**/CMakeFiles/**/*.objlib
+      - build/**/CMakeFiles/**/*.includecache
+      - build/**/*.a
+    expire_in: 3 hrs
+
+test-services-linux-debug:
+  extends: .go-cache
+  image:
+    name: $CI_REGISTRY_IMAGE/asapo-services-linux-build-env:latest
+  stage: test
+  script:
+    - bash /services_start.sh
+    # - cd $CI_PROJECT_DIR/build/tests/automatic/common_scripts
+    # - bash start_services.sh
+    - cd $CI_PROJECT_DIR/build
+    - ctest --no-compress-output -T Test -L "unit|memcheck_unit|coverage" --output-on-failure --output-junit testResult.xml
+  tags:
+    - kubernetes-executor
+  rules:
+    - when: never
+  dependencies:
+    - build-services-linux-debug
+  artifacts:
+    when: always
+    reports:
+      junit: build/testResult.xml
+
+build-services-linux-release:
+  extends: .go-cache
+  image:
+    name: $CI_REGISTRY_IMAGE/asapo-services-linux-build-env:latest
+    entrypoint: [""]
+  variables:
+    CI_REGISTRY_IMAGE_USERNAME: "asapo-dev-registry"
+    CI_REGISTRY_IMAGE_PASSWORD: ${asapo_dev_registry_password}
+  stage: build
+  script:
+    - mkdir $CI_PROJECT_DIR/build
+    - cd $CI_PROJECT_DIR/build
+    - cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON -DBUILD_CONSUMER_TOOLS=ON -DBUILD_BROKER=ON -DBUILD_INTEGRATION_TESTS=ON -DENABLE_LIBFABRIC=ON -DBUILD_CPP_DOCS=ON -DBUILD_EVENT_MONITOR_PRODUCER=ON -DSTOP_BUILD_ON_WARNINGS=ON -DENABLE_NEW_RECEIVER_MONITORING=ON ..
+    - make -j 4
+  tags:
+    - kubernetes-executor
+  rules:
+    - when: always
+  artifacts:
+    paths:
+      - build
+    exclude:
+      - build/**/CMakeFiles/**/*
+      - build/**/*.a
+    expire_in: 3 hrs
+
+build-services-docker:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: deploy
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - services="broker authorizer discovery receiver file-transfer"
+    - >
+      for service in $services; do
+          service_dir=${service//"-"/"_"}
+          /kaniko/executor --cache=false --context $CI_PROJECT_DIR/build/${service_dir} --dockerfile $CI_PROJECT_DIR/build/${service_dir}/Dockerfile --destination $CI_REGISTRY_IMAGE/asapo-${service}-dev:${CI_COMMIT_SHORT_SHA}
+      done
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/build/deploy/asapo_services --dockerfile $CI_PROJECT_DIR/deploy/asapo_services/Dockerfile --destination $CI_REGISTRY_IMAGE/asapo-cluster-dev:${CI_COMMIT_SHORT_SHA} --destination $CI_REGISTRY_IMAGE/asapo-cluster-dev:latest
+  tags:
+    - kubernetes-executor
+  rules:
+    - when: always
+  dependencies:
+    - build-services-linux-release

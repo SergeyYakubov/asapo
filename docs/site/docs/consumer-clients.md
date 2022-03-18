@@ -10,7 +10,6 @@ Consumer API is available for C++ and Python and has the following main function
 
 - Create a consumer instance and bind it to a specific beamtime and data source
     - multiple instances can be created (also within a single application) to receive data from different sources
-    - an instance id and pipeline step id can be set to allow pipeline monitoring
     - a beamtime token is used for access control
 - If needed (mainly for get_next_XX operations), create a consumer group that allows to process messages independently from other groups
 - Receive messages  from a specific stream (you can read more [here](data-in-asapo) about data in ASAPO)

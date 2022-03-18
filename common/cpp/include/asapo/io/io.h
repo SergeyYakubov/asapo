@@ -59,8 +59,6 @@ class IO {
     virtual std::unique_ptr<std::thread> NewThread(const std::string& name,
                                                    std::function<void(uint64_t index)> function, uint64_t index) const = 0;
 
-    virtual int GetCurrentPid() const = 0;
-
     /*
      * Network
      */

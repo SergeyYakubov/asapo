@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
-
-. ../_docker_vars.sh
-
-IMAGE=$ASAPO_DOCKER_REPOSITORY/asapo-cluster:20.06.3
+IMAGE=yakser/asapo-cluster:20.06.3
 
 #folders
 NOMAD_ALLOC_HOST_SHARED=/var/tmp/asapo/container_host_shared/nomad_alloc

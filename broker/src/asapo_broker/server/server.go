@@ -19,7 +19,6 @@ type serverSettings struct {
 	DatabaseServer              string
 	PerformanceDbServer         string
 	PerformanceDbName           string
-	MonitoringServerUrl         string
 	MonitorPerformance 			bool
 	AuthorizationServer         string
 	Port                        int
@@ -61,8 +60,12 @@ func (s *serverSettings) GetDatabaseServer() string {
 
 var settings serverSettings
 var statistics serverStatistics
-var monitoring brokerMonitoring
 var auth Authorizer
+
+type discoveryAPI struct {
+	Client  *http.Client
+	baseURL string
+}
 
 var discoveryService discovery.DiscoveryAPI
 

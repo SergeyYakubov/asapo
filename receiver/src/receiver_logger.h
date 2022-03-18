@@ -9,7 +9,6 @@ struct AuthorizationData;
 class Request;
 
 AbstractLogger* GetDefaultReceiverLogger();
-AbstractLogger* GetDefaultReceiverMonitoringLogger();
 LogMessageWithFields RequestLog(std::string message, const Request* request);
 LogMessageWithFields AuthorizationLog(std::string message, const Request* request, const AuthorizationData* data);
 

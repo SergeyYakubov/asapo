@@ -32,18 +32,14 @@ class ReceiveDataHandlerTests : public Test {
     uint64_t expected_slot_id{16};
     std::string expected_origin_uri = "origin_uri";
     std::string expected_metadata = "meta";
-    std::string expected_beamtime = "test_beamtime";
-    std::string expected_source = "test_source";
-    std::string expected_pipelinestepid = "test_pipe_id";
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
-    char expected_stream[asapo::kMaxMessageSize] = "test_stream";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     MockDataCache mock_cache;
     RequestHandlerReceiveData handler;
     NiceMock<asapo::MockLogger> mock_logger;
-    StrictMock<asapo::MockInstancedStatistics>* mock_instanced_statistics;
+
 
     void SetUp() override {
         generic_request_header.data_size = data_size_;
@@ -51,14 +47,7 @@ class ReceiveDataHandlerTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
-        strcpy(generic_request_header.stream, expected_stream);
-        mock_instanced_statistics = new StrictMock<asapo::MockInstancedStatistics>;
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr,
-                                  std::unique_ptr<asapo::MockInstancedStatistics>{mock_instanced_statistics}});
-        request->SetBeamtimeId(expected_beamtime);
-        request->SetPipelineStepId(expected_pipelinestepid);
-        request->SetDataSource(expected_source);
-
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -81,9 +70,9 @@ void ReceiveDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
         DoAll(
             CopyStr(expected_metadata),
             SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", "", asapo::IOErrorType::kReadError)),
-            Return(ok ? expected_size : 0)
+            Return(0)
         ));
-    EXPECT_CALL(*mock_instanced_statistics, AddIncomingBytes(ok ? expected_size : 0));
+
 }
 void ReceiveDataHandlerTests::ExpectReceiveData(bool ok) {
     ExpectReceive(data_size_, ok);
@@ -91,13 +80,13 @@ void ReceiveDataHandlerTests::ExpectReceiveData(bool ok) {
 
 TEST_F(ReceiveDataHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetworkIncoming));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
 }
 
 
 TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr, nullptr, nullptr});
+    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr, nullptr});
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
@@ -110,7 +99,7 @@ TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveEmptyData) {
 TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent) {
     generic_request_header.data_size = 10;
     generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferMetaDataOnly;
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr, nullptr, nullptr});
+    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr, nullptr});
 
     auto err = handler.ProcessRequest(request.get());
 
@@ -133,36 +122,32 @@ TEST_F(ReceiveDataHandlerTests, HandleGetsMemoryFromCache) {
     request->cache__ = &mock_cache;
     asapo::CacheMeta meta;
     meta.id = expected_slot_id;
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, expected_beamtime, expected_source, expected_stream,_)).WillOnce(
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, _)).WillOnce(
         DoAll(SetArgPointee<1>(&meta),
-              SetArgPointee<5>(nullptr),
+              SetArgPointee<2>(nullptr),
               Return(&mock_cache)
              ));
-    EXPECT_CALL(*mock_instanced_statistics, AddIncomingBytes(0));
 
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
-    ASSERT_THAT(err, Eq(nullptr));
-
 }
 
 
 TEST_F(ReceiveDataHandlerTests, ErrorGetMemoryFromCache) {
     request->cache__ = &mock_cache;
 
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _, expected_beamtime, expected_source, expected_stream,_)).WillOnce(
-        DoAll(SetArgPointee<5>(asapo::ReceiverErrorTemplates::kProcessingError.Generate().release()),
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock_t(data_size_, _,_)).WillOnce(
+        DoAll(SetArgPointee<2>(asapo::ReceiverErrorTemplates::kProcessingError.Generate().release()),
               Return(nullptr)
-    ));
-
-    EXPECT_CALL(*mock_instanced_statistics, AddIncomingBytes(0));
-
+        ));
 
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(request->GetSlotId(), Eq(0));
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+
 
 }

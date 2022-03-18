@@ -35,4 +35,4 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   --name asapo --net=host -d yakser/asapo-cluster-dev:100.0.develop
 
 sleep 15
-docker exec asapo jobs-start
+docker exec asapo jobs-start -var elk_logs=false -var influxdb_version=1.8.4

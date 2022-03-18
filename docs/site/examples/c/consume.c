@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     const char * path_to_files = "/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test"; //set it according to your configuration.
 
     AsapoSourceCredentialsHandle cred = asapo_create_source_credentials(kProcessed,
-                                                                        "test_consumer_instance", "pipeline_step_1", beamtime,
+                                                                        beamtime,
                                                                         "", "test_source", token);
     AsapoConsumerHandle consumer = asapo_create_consumer(endpoint,
                                                          path_to_files, 1,
@@ -61,6 +61,6 @@ int main(int argc, char* argv[]) {
     asapo_free_handle(&data);
     asapo_free_handle(&consumer);
     asapo_free_handle(&group_id);
-
     return EXIT_SUCCESS;
 }
+

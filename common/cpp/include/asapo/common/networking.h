@@ -93,18 +93,20 @@ struct GenericRequestHeader {
       op_code = header.op_code, data_id = header.data_id, data_size = header.data_size, meta_size = header.meta_size,
           memcpy(custom_data, header.custom_data, kNCustomParams * sizeof(uint64_t)),
           memcpy(message, header.message, kMaxMessageSize);
-      strncpy(stream, header.stream, kMaxMessageSize);
-      strncpy(api_version, header.api_version, kMaxVersionSize);
+      memcpy(stream, header.stream, sizeof(stream));
+      memcpy(api_version, header.api_version, sizeof(api_version));
       return *this;
   };
   /* Keep in mind that the message here is just strncpy'ed, you can change the message later */
   GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
                        uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string &i_message = "",
                        const std::string &i_stream = "") :
-      op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
-      strncpy(message, i_message.c_str(), kMaxMessageSize);
-      strncpy(stream, i_stream.c_str(), kMaxMessageSize);
-      strncpy(api_version, "v0.0", kMaxVersionSize);
+      op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size}, custom_data{kDefaultIngestMode, 0, 0} {
+      strncpy(message, i_message.c_str(), kMaxMessageSize - 1);
+      message[kMaxMessageSize - 1] = '\0';
+      strncpy(stream, i_stream.c_str(), kMaxMessageSize - 1);
+      stream[kMaxMessageSize - 1] = '\0';
+      strcpy(api_version, "v0.0");
   }
 
   Opcode op_code;

@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
 
     AsapoErrorHandle err = asapo_new_handle();
     AsapoSourceCredentialsHandle cred = asapo_create_source_credentials(kProcessed,
-                                                                        "auto", "auto",
-                                                                        beamtime, "", source, "");
+                                                                        beamtime,
+                                                                        "", source, "");
 
     AsapoProducerHandle producer = asapo_create_producer(endpoint,3,kTcp, cred,60000,&err);
     EXIT_IF_ERROR("create producer", err);

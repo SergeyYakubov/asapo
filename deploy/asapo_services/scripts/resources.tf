@@ -13,6 +13,7 @@ resource "nomad_job" "asapo-perfmetrics" {
 
 resource "nomad_job" "asapo-monitoring" {
   jobspec = data.template_file.asapo_monitoring.rendered
+  depends_on = [null_resource.asapo-broker,null_resource.asapo-receiver]
 }
 
 
@@ -28,16 +29,16 @@ resource "nomad_job" "asapo-services" {
 
 resource "nomad_job" "asapo-receivers" {
   jobspec = data.template_file.asapo_receivers.rendered
-  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery,null_resource.asapo-monitoring-server]
+  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
 }
 
 resource "nomad_job" "asapo-brokers" {
   jobspec = data.template_file.asapo_brokers.rendered
-  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery,null_resource.asapo-monitoring-server]
+  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
 }
 
 resource "nomad_job" "asapo-fts" {
   jobspec = data.template_file.asapo_fts.rendered
-  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery,null_resource.asapo-monitoring-server]
+  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
 }
 

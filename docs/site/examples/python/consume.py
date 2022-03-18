@@ -22,10 +22,7 @@ consumer = asapo_consumer \
                                  beamtime,       # Same as for the producer
                                  "test_source",  # Same as for the producer
                                  token,          # Access token
-                                 5000,           # Timeout. How long do you want to wait on non-finished stream for a message.
-                                 'test_consumer_instance', # conumser instance id (can be 'auto')
-                                 'pipeline_step_1' # pipeline step id
-                                 )
+                                 5000)           # Timeout. How long do you want to wait on non-finished stream for a message.
 #create snippet_end
 
 #list snippet_start

@@ -10,15 +10,6 @@
 
 namespace asapo {
 
-// this information comes from the consumer
-struct RequestSenderDetails {
-    std::string instance_id;
-    std::string pipeline_step_id;
-    std::string beamtime;
-    std::string source;
-    std::string stream; // from the broker from the database (extra record)
-};
-
 class ReceiverDataServerRequestHandler: public RequestHandler {
   public:
     explicit ReceiverDataServerRequestHandler(RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
@@ -41,8 +32,6 @@ class ReceiverDataServerRequestHandler: public RequestHandler {
     void HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request, NetworkErrorCode code);
 
     void HandleValidRequest(const ReceiverDataServerRequest* receiver_request, const CacheMeta* meta);
-
-    static std::unique_ptr<RequestSenderDetails> ExtractMonitoringInfoFromRequest(const GenericRequest* request);
 };
 
 }

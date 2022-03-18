@@ -22,7 +22,6 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Ref;
 using ::testing::Return;
-using ::testing::ReturnRef;
 using ::testing::_;
 using ::testing::SetArgPointee;
 using ::testing::NiceMock;
@@ -79,14 +78,13 @@ class ReceiverDataServerTests : public Test {
 };
 
 TEST_F(ReceiverDataServerTests, TimeoutGetNewRequests) {
-    auto reqs = std::vector<ReceiverDataServerRequest> {};
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kTimeout.Generate().release()),
-              ReturnRef(reqs)
+              Return(std::vector<ReceiverDataServerRequest> {})
              )
     ).WillOnce(
         DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
-              ReturnRef(reqs)
+              Return(std::vector<ReceiverDataServerRequest> {})
              )
     );
 
@@ -97,10 +95,9 @@ TEST_F(ReceiverDataServerTests, TimeoutGetNewRequests) {
 }
 
 TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
-    auto reqs = std::vector<ReceiverDataServerRequest> {};
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
-              ReturnRef(reqs)
+              Return(std::vector<ReceiverDataServerRequest> {})
              )
     );
 
@@ -110,10 +107,9 @@ TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
 }
 
 TEST_F(ReceiverDataServerTests, ErrorAddingRequests) {
-    auto reqs = std::vector<ReceiverDataServerRequest> {};
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(nullptr),
-              ReturnRef(reqs)
+              Return(std::vector<ReceiverDataServerRequest> {})
              )
     );
 
@@ -127,14 +123,13 @@ TEST_F(ReceiverDataServerTests, ErrorAddingRequests) {
 }
 
 TEST_F(ReceiverDataServerTests, Ok) {
-    auto reqs = std::vector<ReceiverDataServerRequest> {};
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(nullptr),
-              ReturnRef(reqs)
+              Return(std::vector<ReceiverDataServerRequest> {})
              )
     ).WillOnce(
         DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
-              ReturnRef(reqs)
+              Return(std::vector<ReceiverDataServerRequest> {})
              )
     );
 

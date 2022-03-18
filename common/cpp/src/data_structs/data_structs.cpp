@@ -19,8 +19,6 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
-const std::string SourceCredentials::kDefaultInstanceId = "auto";
-const std::string SourceCredentials::kDefaultPipelineStep = "auto";
 const std::string SourceCredentials::kDefaultDataSource = "detector";
 const std::string SourceCredentials::kDefaultBeamline = "auto";
 const std::string SourceCredentials::kDefaultBeamtimeId = "auto";
@@ -70,9 +68,7 @@ std::string MessageMeta::Json() const {
                     + std::to_string(nanoseconds_from_epoch) + ","
                     "\"source\":\"" + source + "\","
                     "\"buf_id\":" + std::to_string(buf_id_int) + ","
-                    "\"stream\":\"" + stream + "\","
                     "\"dataset_substream\":" + std::to_string(dataset_substream) + ","
-                    "\"ingest_mode\":" + std::to_string(ingest_mode) + ","
                     "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
                     + "}";
     return s;
@@ -123,11 +119,6 @@ bool MessageMeta::SetFromJson(const std::string& json_string) {
 
     JsonStringParser parser(json_string);
 
-    // might be missing and cannot be guaranteed for older datasets
-    if (parser.GetString("stream", &stream)) {
-        stream = "unknownStream";
-    }
-
     if (parser.GetUInt64("_id", &id) ||
             parser.GetUInt64("size", &size) ||
             parser.GetString("name", &name) ||
@@ -139,8 +130,8 @@ bool MessageMeta::SetFromJson(const std::string& json_string) {
         *this = old;
         return false;
     }
-    //ignore error if ingest_mode not found
-    parser.GetUInt64("ingest_mode", &ingest_mode);
+
+//ignore error if meta not found
 
     return true;
 }

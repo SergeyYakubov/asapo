@@ -1,5 +1,3 @@
-variable "asapo_docker_repository" {}
-
 variable "elk_logs" {}
 
 variable "perf_monitor" {}
@@ -33,6 +31,12 @@ variable "mongo_version" {}
 variable "prometheus_version" {}
 
 variable "alertmanager_version" {}
+
+variable "asapo_image_registry" {}
+
+variable "asapo_image_registry_username" {}
+
+variable "asapo_image_registry_password" {}
 
 variable "asapo_imagename_suffix" {}
 
@@ -84,11 +88,6 @@ variable "prometheus_total_memory_size" {}
 
 variable "alertmanager_total_memory_size" {}
 
-variable "monitoring_server_total_memory_size" {}
-
-variable "monitoring_proxy_total_memory_size" {}
-
-variable "monitoring_ui_total_memory_size" {}
 
 variable "grafana_port" {}
 
@@ -115,10 +114,6 @@ variable "discovery_port" {}
 variable "authorizer_port" {}
 
 variable "consul_dns_port" {}
-
-variable "monitoring_proxy_port" {}
-
-variable "monitoring_ui_port" {}
 
 variable "n_receivers" {}
 

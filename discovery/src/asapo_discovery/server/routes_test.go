@@ -34,7 +34,7 @@ func (suite *GetServicesTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
 	var s common.Settings = common.Settings{Receiver: common.ReceiverInfo{MaxConnections: 10, StaticEndpoints: []string{"ip1", "ip2"}},
 		Broker: common.BrokerInfo{StaticEndpoint: "ip_broker"}, Mongo: common.MongoInfo{StaticEndpoint: "ip_mongo"},
-		FileTransferService: common.FtsInfo{StaticEndpoint: "ip_fts"},Monitoring: common.MonitoringInfo{StaticEndpoint: "ip_monitoring"}}
+		FileTransferService: common.FtsInfo{StaticEndpoint: "ip_fts"}}
 
 	requestHandler.Init(s)
 	logger.SetMockLog()
@@ -137,18 +137,6 @@ func (suite *GetServicesTestSuite) TestGetFts() {
 	suite.Equal(w.Body.String(), "ip_fts", "result")
 	assertExpectations(suite.T())
 }
-
-func (suite *GetServicesTestSuite) TestGetMonitoring() {
-	logger.MockLog.On("WithFields", mock.Anything)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))
-
-	w := doRequest("/asapo-monitoring")
-
-	suite.Equal(http.StatusOK, w.Code, "code ok")
-	suite.Equal(w.Body.String(), "ip_monitoring", "result")
-	assertExpectations(suite.T())
-}
-
 
 func (suite *GetServicesTestSuite) TestGetVersions() {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))

@@ -2,11 +2,7 @@
 
 set -e
 
-cd /asapo
-rm -rf build || true
-mkdir build
-cd build
-
+cd /asapo/build
 cmake \
     -DCMAKE_BUILD_TYPE="Release" \
     -DENABLE_LIBFABRIC=ON \

@@ -46,7 +46,6 @@ class ReceiveFileProcessorTests : public Test {
                                       asapo::kPathSeparator + expected_year +
                                       asapo::kPathSeparator + "data" +
                                       asapo::kPathSeparator + expected_beamtime_id;
-    void ExpectFileWrite(const asapo::ErrorTemplateInterface* error_template);
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
@@ -54,7 +53,7 @@ class ReceiveFileProcessorTests : public Test {
         asapo::ReceiverConfig test_config;
         asapo::SetReceiverConfig(test_config, "none");
         processor.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr, nullptr});
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr});
         processor.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
 
@@ -84,13 +83,6 @@ void ReceiveFileProcessorTests::MockRequestData() {
 
     EXPECT_CALL(*mock_request, GetFileName()).Times(2)
     .WillRepeatedly(Return(expected_file_name));
-}
-
-void ReceiveFileProcessorTests::ExpectFileWrite(const asapo::ErrorTemplateInterface* error_template) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_full_path, expected_file_name, _, expected_file_size, true,
-                                           expected_overwrite))
-    .WillOnce(
-        Return(error_template == nullptr ? nullptr : error_template->Generate().release()));
 }
 
 TEST_F(ReceiveFileProcessorTests, CallsReceiveFile) {

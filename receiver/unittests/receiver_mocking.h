@@ -19,36 +19,26 @@ class MockStatistics : public asapo::ReceiverStatistics {
         SendIfNeeded_t(send_always);
     }
 
+
     void IncreaseRequestCounter() noexcept override {
         IncreaseRequestCounter_t();
+    }
+    void StartTimer(const asapo::StatisticEntity& entity) noexcept override {
+        StartTimer_t(entity);
     }
     void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept override {
         IncreaseRequestDataVolume_t(transferred_data_volume);
     }
+    void StopTimer() noexcept override {
+        StopTimer_t();
+    }
 
-    MOCK_METHOD1(SendIfNeeded_t, void(bool send_always));
-    MOCK_METHOD0(IncreaseRequestCounter_t, void());
-    MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t transferred_data_volume));
+    MOCK_METHOD(void, SendIfNeeded_t, (bool send_always), ());
+    MOCK_METHOD(void, IncreaseRequestCounter_t, (), ());
+    MOCK_METHOD(void, StopTimer_t, (), ());
+    MOCK_METHOD(void, IncreaseRequestDataVolume_t, (uint64_t transferred_data_volume), ());
+    MOCK_METHOD(void, StartTimer_t, (const asapo::StatisticEntity& entity), ());
 
-};
-
-class MockInstancedStatistics : public asapo::RequestStatistics {
-public:
-    MOCK_METHOD1(StartTimer, void(StatisticEntity entity));
-    MOCK_METHOD0(StopTimer, void());
-
-    MOCK_METHOD1(AddIncomingBytes, void(uint64_t incomingByteCount));
-    MOCK_METHOD1(AddOutgoingBytes, void(uint64_t outgoingByteCount));
-
-    MOCK_CONST_METHOD0(GetIncomingBytes, uint64_t());
-    MOCK_CONST_METHOD0(GetOutgoingBytes, uint64_t());
-
-    MOCK_CONST_METHOD1(GetOutgoingBytes, std::chrono::nanoseconds(StatisticEntity entity));
-    MOCK_CONST_METHOD1(GetElapsedMicrosecondsCount, uint64_t(StatisticEntity entity));
-
-    MOCK_METHOD1(SendIfNeeded, void(bool send_always));
-    MOCK_METHOD0(IncreaseRequestCounter_t, void());
-    MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t transferred_data_volume));
 };
 
 class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
@@ -71,8 +61,8 @@ class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
-                const RequestHandlerDbCheckRequest* db_check_handler, RequestStatisticsPtr statistics):
-        Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler, std::move(statistics)) {};
+                const RequestHandlerDbCheckRequest* db_check_handler ):
+        Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler) {};
 
 //    MOCK_METHOD(, ), (const,override), (override));
     MOCK_METHOD(std::string, GetFileName, (), (const, override));
@@ -84,19 +74,15 @@ class MockRequest: public Request {
     MOCK_METHOD(uint64_t, GetDataID, (), (const, override));
     MOCK_METHOD(uint64_t, GetSlotId, (), (const, override));
     MOCK_METHOD(void*, GetData, (), (const, override));
-    MOCK_CONST_METHOD0(GetPipelineStepId, const std::string & ());
-    MOCK_CONST_METHOD0(GetProducerInstanceId, const std::string & ());
     MOCK_METHOD(const std::string &, GetBeamtimeId, (), (const, override));
     MOCK_METHOD(const std::string &, GetDataSource, (), (const, override));
     MOCK_METHOD(const std::string &, GetMetaData, (), (const, override));
     MOCK_METHOD(const std::string &, GetBeamline, (), (const, override));
     MOCK_METHOD(asapo::Opcode, GetOpCode, (), (const, override));
     MOCK_METHOD(asapo::SocketDescriptor, GetSocket, (), (const, override));
-    MOCK_METHOD(uint64_t, GetIngestMode, (), (const, override));
+
     MOCK_METHOD(const std::string &, GetOnlinePath, (), (const, override));
     MOCK_METHOD(const std::string &, GetOfflinePath, (), (const, override));
-
-    MOCK_METHOD0(GetStatistics, RequestStatistics*());
 
     // not nice casting, but mocking GetCustomData directly does not compile on Windows.
     const CustomRequestData& GetCustomData() const override {
@@ -105,8 +91,6 @@ class MockRequest: public Request {
 
     MOCK_METHOD(const uint64_t*, GetCustomData_t, (), (const));
     MOCK_METHOD(const char*, GetMessage, (), (const)); //override does not compile on windows, not clear why ()
-    MOCK_METHOD1(SetProducerInstanceId, void (std::string));
-    MOCK_METHOD1(SetPipelineStepId, void (std::string));
     MOCK_METHOD(void, SetBeamtimeId, (std::string), (override));
     MOCK_METHOD(void, SetDataSource, (std::string), (override));
     MOCK_METHOD(void, SetBeamline, (std::string), (override));
@@ -137,19 +121,19 @@ class MockRequest: public Request {
 class MockDataCache: public DataCache {
   public:
     MockDataCache(): DataCache(0, 0) {};
-    void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,std::string beamtime, std::string source, std::string stream, Error* err) override{
+
+    void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta, Error* err) override{
       ErrorInterface* error = nullptr;
-      auto data = GetFreeSlotAndLock_t(size, meta,beamtime,source,stream, &error);
+      auto data = GetFreeSlotAndLock_t(size, meta, &error);
       err->reset(error);
       return data;
     }
 
-    MOCK_METHOD(void*, GetFreeSlotAndLock_t, (uint64_t size, CacheMeta** meta,std::string beamtime, std::string source, std::string stream,ErrorInterface** err));
+    MOCK_METHOD(void*, GetFreeSlotAndLock_t, (uint64_t size, CacheMeta** meta,ErrorInterface** err));
     MOCK_METHOD(bool, UnlockSlot, (CacheMeta* meta), (override));
-    MOCK_CONST_METHOD0(AllMetaInfosAsVector, std::vector<std::shared_ptr<const CacheMeta>>());
-    MOCK_CONST_METHOD0(GetCacheSize, uint64_t());
     MOCK_METHOD(void*, GetSlotToReadAndLock, (uint64_t id, uint64_t data_size, CacheMeta** meta), (override));
 };
+
 
 class MockStatisticsSender: public StatisticsSender {
   public:

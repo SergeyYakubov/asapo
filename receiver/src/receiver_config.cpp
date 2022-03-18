@@ -19,8 +19,6 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
 
     std::vector<std::string> kafkaTopics;
 
-    // New monitoring
-    (err = parser.GetString("MonitoringServer", &config.monitoring_server_url)) ||
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
     (err = parser.GetBool("MonitorPerformance", &config.monitor_performance)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||

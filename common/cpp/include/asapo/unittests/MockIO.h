@@ -8,7 +8,6 @@
 namespace asapo {
 class MockIO : public IO {
   public:
-    MOCK_CONST_METHOD0(GetCurrentPid, int());
 
     std::string GetHostName(Error* err) const noexcept override {
         ErrorInterface* error = nullptr;

@@ -7,12 +7,6 @@ import (
 
 var listRoutes = utils.Routes{
 	utils.Route{
-		"GetMonitoringServers",
-		"Get",
-		"/" + common.NameMonitoringServer,
-		routeGetMonitoringServers,
-	},
-	utils.Route{
 		"GetReceivers",
 		"Get",
 		"/{apiver}/" + common.NameReceiverService,

@@ -25,7 +25,7 @@ class InitialAuthorizationHandlerTests : public Test {
 
     void SetUp() override {
         GenericRequestHeader request_header;
-        mock_request.reset(new MockRequest{request_header, 1, "", nullptr, nullptr});
+        mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
         handler.auth_client__ = std::unique_ptr<asapo::AuthorizationClient> {&mock_authorization_client};
         SetDefaultRequestCalls(mock_request.get(),"");
 
@@ -45,7 +45,6 @@ class InitialAuthorizationHandlerTests : public Test {
 
 TEST_F(InitialAuthorizationHandlerTests, AuthorizeOk) {
     ExpectAuthMocks();
-
     auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(nullptr));
@@ -72,7 +71,7 @@ TEST_F(InitialAuthorizationHandlerTests, RequestFromUnsupportedClient) {
 
 TEST_F(InitialAuthorizationHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetworkIncoming));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
 }
 
 
